@@ -47,22 +47,13 @@ SCENE FORMAT:
   "duration": ${sceneDuration},
   "narration": "2-3 sentences for narrator",
   "background": "#1c1c1c",
-  "elements": [5-8 elements]
+  "elements": [10-15 elements - MUST BE DETAILED with many visual elements!]
 }
 
-LAYOUT ZONES (use these to PREVENT OVERLAPPING):
-- TITLE ZONE: y: 80-150 (for headers/titles)
-- EQUATION ZONE: y: 160-250 (for main equations)
-- VISUAL ZONE: y: 260-480 (for shapes, circles, graphs)
-- LABEL ZONE: put labels OUTSIDE shapes, not on top
-
-CRITICAL ANTI-OVERLAP RULES:
-1. NEVER place a circle, shape, or graph at the same Y position as text or equations
-2. Keep equations in EQUATION ZONE (y: 160-250)
-3. Keep geometric shapes in VISUAL ZONE (y: 260-480)
-4. Circles should be at y: 350+ (away from equations)
-5. If using a grid, put it behind everything (delay: 0)
-6. Space elements at least 80px apart vertically
+LAYOUT ZONES (PREVENT OVERLAPPING):
+- TITLE ZONE: y: 80-150 (headers/titles)
+- EQUATION ZONE: y: 160-250 (equations)
+- VISUAL ZONE: y: 260-520 (shapes, circles, graphs, diagrams)
 
 ELEMENT TYPES:
 
@@ -70,23 +61,30 @@ ELEMENT TYPES:
 
 2. EQUATION: {"id":"eq1","type":"equation","props":{"equation":"a² + b² = c²","x":400,"y":200},"style":{"fillColor":"#58c4dd","fontSize":42,"glow":true},"animation":{"type":"fadeIn","duration":1000,"delay":500}}
 
-3. CIRCLE: {"id":"c1","type":"circle","props":{"x":400,"y":380,"radius":80},"style":{"strokeColor":"#5cd0b3","strokeWidth":3},"animation":{"type":"draw","duration":1200,"delay":200}}
+3. CIRCLE: {"id":"c1","type":"circle","props":{"x":400,"y":380,"radius":80},"style":{"strokeColor":"#5cd0b3","strokeWidth":3,"glow":true},"animation":{"type":"draw","duration":1200,"delay":200}}
 
 4. LINE: {"id":"l1","type":"line","props":{"x1":200,"y1":350,"x2":600,"y2":350},"style":{"strokeColor":"#888888","strokeWidth":2},"animation":{"type":"draw","duration":600,"delay":0}}
 
 5. ARROW: {"id":"a1","type":"arrow","props":{"x1":300,"y1":400,"x2":500,"y2":300},"style":{"strokeColor":"#fc6255","strokeWidth":3},"animation":{"type":"draw","duration":800,"delay":400}}
 
-6. GRAPH: {"id":"g1","type":"graph","props":{"fn":"sin(x)","xMin":-6,"xMax":6,"xScale":40,"yScale":40,"originX":400,"originY":380},"style":{"strokeColor":"#58c4dd","strokeWidth":3},"animation":{"type":"draw","duration":2000,"delay":600}}
+6. GRAPH - supports these functions: sin(x), cos(x), x^2, x^3, sqrt(x), log(x), exp(x), x*log(x), abs(x)
+   {"id":"g1","type":"graph","props":{"fn":"x^2","xMin":-4,"xMax":4,"xScale":50,"yScale":20,"originX":400,"originY":400},"style":{"strokeColor":"#58c4dd","strokeWidth":3,"glow":true},"animation":{"type":"draw","duration":2000,"delay":600}}
 
-7. SHAPE: {"id":"s1","type":"shape","props":{"points":[{"x":250,"y":480},{"x":550,"y":480},{"x":400,"y":280}]},"style":{"strokeColor":"#ffff00","strokeWidth":2},"animation":{"type":"draw","duration":1200,"delay":300}}
+7. SHAPE (polygon): {"id":"s1","type":"shape","props":{"points":[{"x":250,"y":480},{"x":550,"y":480},{"x":400,"y":300}]},"style":{"strokeColor":"#ffff00","strokeWidth":2,"fillColor":"rgba(255,255,0,0.1)"},"animation":{"type":"draw","duration":1200,"delay":300}}
 
 8. GRID: {"id":"grid1","type":"grid","props":{"originX":400,"originY":380,"width":500,"height":250,"spacing":50},"style":{"strokeColor":"#444444","opacity":0.3},"animation":{"type":"fadeIn","duration":400,"delay":0}}
 
 COLORS: #58c4dd (blue), #5cd0b3 (teal), #83c167 (green), #ffff00 (yellow), #e1a158 (gold), #fc6255 (red), #9a72ac (purple), #ece6e2 (white)
 
-Use SIMPLE Unicode for equations: ², ³, π, θ, α, β, γ, λ, Σ, ∫, √, ∞, ≈, ≠, ≤, ≥, →, ×, ÷, ±
+CRITICAL REQUIREMENTS:
+1. Generate EXACTLY ${sceneCount} scenes
+2. Each scene MUST have 10-15 elements for rich visuals
+3. Include multiple shapes, arrows, labels per scene
+4. Use staggered animation delays (0, 200, 400, 600, 800, 1000, 1200...)
+5. Add annotations and labels to diagrams
+6. Use Unicode: ², ³, π, θ, α, β, γ, λ, Σ, ∫, √, ∞, ≈, ≠, ≤, ≥, →, ×, ÷, ±
 
-Generate EXACTLY ${sceneCount} scenes. Start with title, then build concepts step by step.`;
+Create visually rich, educational content. Each scene should tell part of the story with detailed diagrams.`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;

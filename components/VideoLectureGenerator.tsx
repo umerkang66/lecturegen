@@ -308,33 +308,115 @@ class FastAnimationEngine {
     private drawGraph(el: Scene['elements'][0], p: number) {
         const props = el.props as { fn: string; xMin: number; xMax: number; xScale: number; yScale: number; originX: number; originY: number };
         const s = el.style || {};
+
+        // Enhanced function evaluator with more math functions
         const evalFn = (x: number): number => {
             try {
-                const expr = props.fn.replace(/\^/g, '**').replace(/sin/g, 'Math.sin').replace(/cos/g, 'Math.cos')
-                    .replace(/tan/g, 'Math.tan').replace(/sqrt/g, 'Math.sqrt').replace(/abs/g, 'Math.abs')
-                    .replace(/PI/g, 'Math.PI').replace(/e(?![a-z])/g, 'Math.E');
+                let expr = props.fn
+                    // Handle n*log(n) style expressions
+                    .replace(/\bn\b/g, 'x')
+                    .replace(/\^/g, '**')
+                    // Logarithms
+                    .replace(/log10\(/g, 'Math.log10(')
+                    .replace(/log2\(/g, 'Math.log2(')
+                    .replace(/log\(/g, 'Math.log(')
+                    .replace(/ln\(/g, 'Math.log(')
+                    // Trig functions
+                    .replace(/sin\(/g, 'Math.sin(')
+                    .replace(/cos\(/g, 'Math.cos(')
+                    .replace(/tan\(/g, 'Math.tan(')
+                    .replace(/asin\(/g, 'Math.asin(')
+                    .replace(/acos\(/g, 'Math.acos(')
+                    .replace(/atan\(/g, 'Math.atan(')
+                    // Other functions
+                    .replace(/sqrt\(/g, 'Math.sqrt(')
+                    .replace(/abs\(/g, 'Math.abs(')
+                    .replace(/exp\(/g, 'Math.exp(')
+                    .replace(/floor\(/g, 'Math.floor(')
+                    .replace(/ceil\(/g, 'Math.ceil(')
+                    .replace(/pow\(/g, 'Math.pow(')
+                    // Constants
+                    .replace(/\bPI\b/g, 'Math.PI')
+                    .replace(/\bpi\b/g, 'Math.PI')
+                    .replace(/\be\b(?!\w)/g, 'Math.E');
                 return new Function('x', `return ${expr}`)(x);
-            } catch { return 0; }
+            } catch { return NaN; }
         };
+
+        const originX = props.originX;
+        const originY = props.originY;
+
+        // Draw subtle grid lines first
+        this.ctx.strokeStyle = '#333';
+        this.ctx.lineWidth = 0.5;
+        this.ctx.globalAlpha = 0.3 * p;
+        for (let gx = props.xMin; gx <= props.xMax; gx += 1) {
+            const px = originX + gx * props.xScale;
+            this.ctx.beginPath();
+            this.ctx.moveTo(px, originY - 150);
+            this.ctx.lineTo(px, originY + 150);
+            this.ctx.stroke();
+        }
+        this.ctx.globalAlpha = 1;
+
+        // Draw axes with arrows
+        this.ctx.strokeStyle = '#666';
+        this.ctx.lineWidth = 2;
+        this.ctx.beginPath();
+        // X axis
+        this.ctx.moveTo(originX + props.xMin * props.xScale - 20, originY);
+        this.ctx.lineTo(originX + props.xMax * props.xScale + 30, originY);
+        // Y axis  
+        this.ctx.moveTo(originX, originY + 120);
+        this.ctx.lineTo(originX, originY - 150);
+        this.ctx.stroke();
+
+        // Draw the actual curve
         const drawMax = props.xMin + (props.xMax - props.xMin) * p;
-        const steps = 150;
-        const step = (drawMax - props.xMin) / steps;
+        const steps = 200;
+        const stepSize = (drawMax - props.xMin) / steps;
+
         this.ctx.beginPath();
         this.ctx.strokeStyle = (s.strokeColor as string) || COLORS.blue;
         this.ctx.lineWidth = (s.strokeWidth as number) || 3;
         this.ctx.lineCap = 'round';
         this.ctx.lineJoin = 'round';
+
+        // Add glow effect
+        if (s.glow) {
+            this.ctx.shadowColor = (s.glowColor as string) || (s.strokeColor as string) || COLORS.blue;
+            this.ctx.shadowBlur = 10;
+        }
+
         let started = false;
+        let prevY = 0;
         for (let i = 0; i <= steps; i++) {
-            const x = props.xMin + i * step;
+            const x = props.xMin + i * stepSize;
+            if (x <= 0 && props.fn.includes('log')) continue; // Skip negative for log
             const y = evalFn(x);
-            const cx = props.originX + x * props.xScale;
-            const cy = props.originY - y * props.yScale;
-            if (!isFinite(y) || Math.abs(y) > 50) { started = false; continue; }
-            if (!started) { this.ctx.moveTo(cx, cy); started = true; }
-            else { this.ctx.lineTo(cx, cy); }
+            const cx = originX + x * props.xScale;
+            const cy = originY - y * props.yScale;
+
+            // Skip invalid values or values too far off screen
+            if (!isFinite(y) || isNaN(y) || Math.abs(y) > 100) {
+                started = false;
+                continue;
+            }
+            // Skip if there's a huge jump (discontinuity)
+            if (started && Math.abs(y - prevY) > 20) {
+                started = false;
+            }
+            prevY = y;
+
+            if (!started) {
+                this.ctx.moveTo(cx, cy);
+                started = true;
+            } else {
+                this.ctx.lineTo(cx, cy);
+            }
         }
         this.ctx.stroke();
+        this.ctx.shadowBlur = 0;
     }
 
     private drawShape(el: Scene['elements'][0], p: number) {
