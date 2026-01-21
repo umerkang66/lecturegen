@@ -47,13 +47,26 @@ SCENE FORMAT:
   "duration": ${sceneDuration},
   "narration": "2-3 sentences for narrator",
   "background": "#1c1c1c",
-  "elements": [10-15 elements - MUST BE DETAILED with many visual elements!]
+  "elements": [8-12 elements]
 }
 
-LAYOUT ZONES (PREVENT OVERLAPPING):
-- TITLE ZONE: y: 80-150 (headers/titles)
-- EQUATION ZONE: y: 160-250 (equations)
-- VISUAL ZONE: y: 260-520 (shapes, circles, graphs, diagrams)
+STRICT ANTI-OVERLAP LAYOUT RULES:
+*** NO TWO TEXT/EQUATION ELEMENTS CAN HAVE Y VALUES WITHIN 50px OF EACH OTHER ***
+
+| Element Type | Allowed Y Range | Notes |
+|--------------|-----------------|-------|
+| Title text   | y: 80-120       | Only ONE title per scene |
+| Subtitle     | y: 140-170      | Secondary text only |
+| Equation     | y: 190-230      | Main equations |
+| Labels       | y: place NEXT TO shapes, not on top |
+| Graphs       | originY: 380-450 | Lower portion of screen |
+| Shapes       | y: 300-500      | Visual zone |
+| Circles      | y: 350-450      | Away from text |
+
+LABEL PLACEMENT FOR GRAPHS:
+- Put graph labels on the RIGHT side of the graph (x: 600-700)
+- Space labels vertically: first at y:280, second at y:320, third at y:360, etc.
+- DO NOT place labels at the same Y as equations or titles
 
 ELEMENT TYPES:
 
@@ -61,30 +74,22 @@ ELEMENT TYPES:
 
 2. EQUATION: {"id":"eq1","type":"equation","props":{"equation":"a² + b² = c²","x":400,"y":200},"style":{"fillColor":"#58c4dd","fontSize":42,"glow":true},"animation":{"type":"fadeIn","duration":1000,"delay":500}}
 
-3. CIRCLE: {"id":"c1","type":"circle","props":{"x":400,"y":380,"radius":80},"style":{"strokeColor":"#5cd0b3","strokeWidth":3,"glow":true},"animation":{"type":"draw","duration":1200,"delay":200}}
+3. CIRCLE: {"id":"c1","type":"circle","props":{"x":400,"y":400,"radius":80},"style":{"strokeColor":"#5cd0b3","strokeWidth":3},"animation":{"type":"draw","duration":1200,"delay":200}}
 
-4. LINE: {"id":"l1","type":"line","props":{"x1":200,"y1":350,"x2":600,"y2":350},"style":{"strokeColor":"#888888","strokeWidth":2},"animation":{"type":"draw","duration":600,"delay":0}}
+4. GRAPH: {"id":"g1","type":"graph","props":{"fn":"x^2","xMin":-4,"xMax":4,"xScale":50,"yScale":15,"originX":350,"originY":420},"style":{"strokeColor":"#58c4dd","strokeWidth":3},"animation":{"type":"draw","duration":2000,"delay":600}}
 
-5. ARROW: {"id":"a1","type":"arrow","props":{"x1":300,"y1":400,"x2":500,"y2":300},"style":{"strokeColor":"#fc6255","strokeWidth":3},"animation":{"type":"draw","duration":800,"delay":400}}
-
-6. GRAPH - supports these functions: sin(x), cos(x), x^2, x^3, sqrt(x), log(x), exp(x), x*log(x), abs(x)
-   {"id":"g1","type":"graph","props":{"fn":"x^2","xMin":-4,"xMax":4,"xScale":50,"yScale":20,"originX":400,"originY":400},"style":{"strokeColor":"#58c4dd","strokeWidth":3,"glow":true},"animation":{"type":"draw","duration":2000,"delay":600}}
-
-7. SHAPE (polygon): {"id":"s1","type":"shape","props":{"points":[{"x":250,"y":480},{"x":550,"y":480},{"x":400,"y":300}]},"style":{"strokeColor":"#ffff00","strokeWidth":2,"fillColor":"rgba(255,255,0,0.1)"},"animation":{"type":"draw","duration":1200,"delay":300}}
-
-8. GRID: {"id":"grid1","type":"grid","props":{"originX":400,"originY":380,"width":500,"height":250,"spacing":50},"style":{"strokeColor":"#444444","opacity":0.3},"animation":{"type":"fadeIn","duration":400,"delay":0}}
+5. SHAPE: {"id":"s1","type":"shape","props":{"points":[{"x":200,"y":500},{"x":600,"y":500},{"x":400,"y":300}]},"style":{"strokeColor":"#ffff00","strokeWidth":2},"animation":{"type":"draw","duration":1200,"delay":300}}
 
 COLORS: #58c4dd (blue), #5cd0b3 (teal), #83c167 (green), #ffff00 (yellow), #e1a158 (gold), #fc6255 (red), #9a72ac (purple), #ece6e2 (white)
 
-CRITICAL REQUIREMENTS:
+REQUIREMENTS:
 1. Generate EXACTLY ${sceneCount} scenes
-2. Each scene MUST have 10-15 elements for rich visuals
-3. Include multiple shapes, arrows, labels per scene
-4. Use staggered animation delays (0, 200, 400, 600, 800, 1000, 1200...)
-5. Add annotations and labels to diagrams
-6. Use Unicode: ², ³, π, θ, α, β, γ, λ, Σ, ∫, √, ∞, ≈, ≠, ≤, ≥, →, ×, ÷, ±
+2. *** NEVER place text elements within 50px of each other vertically ***
+3. Graph labels go on RIGHT side (x: 600-700), spaced 40px apart vertically
+4. Keep Y spacing: Title(100) → Subtitle(150) → Equation(200) → Labels(280,320,360) → Graph(420)
+5. Use Unicode: ², ³, π, θ, α, β, γ, λ, Σ, ∫, √, ∞
 
-Create visually rich, educational content. Each scene should tell part of the story with detailed diagrams.`;
+Create educational content with WELL-SPACED elements. NO OVERLAPPING.`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
