@@ -17,6 +17,7 @@ class FastAnimationEngine {
     private currentScene: Scene | null = null;
     private animationFrame: number | null = null;
     private startTime = 0;
+    private actualDuration = 0;
     private isPlaying = false;
     private onSceneComplete?: () => void;
 
@@ -39,6 +40,18 @@ class FastAnimationEngine {
     public playScene(scene: Scene, onComplete?: () => void) {
         this.currentScene = scene;
         this.onSceneComplete = onComplete;
+
+        // Calculate when all animations will be done (not the full scene duration)
+        let maxAnimEnd = 0;
+        for (const el of scene.elements) {
+            if (el.animation) {
+                const animEnd = (el.animation.delay || 0) + el.animation.duration;
+                maxAnimEnd = Math.max(maxAnimEnd, animEnd);
+            }
+        }
+        // Add small buffer after last animation, cap at scene duration
+        this.actualDuration = Math.min(maxAnimEnd + 500, scene.duration);
+
         this.startTime = performance.now();
         this.isPlaying = true;
         this.animate();
@@ -55,9 +68,13 @@ class FastAnimationEngine {
     private animate = () => {
         if (!this.isPlaying || !this.currentScene) return;
         const elapsed = performance.now() - this.startTime;
-        const progress = Math.min(elapsed / this.currentScene.duration, 1);
-        this.render(progress);
-        if (progress < 1) {
+        // Use actualDuration for completion, but scene.duration for animation timing
+        const animProgress = Math.min(elapsed / this.currentScene.duration, 1);
+        const completionProgress = elapsed / this.actualDuration;
+
+        this.render(animProgress);
+
+        if (completionProgress < 1) {
             this.animationFrame = requestAnimationFrame(this.animate);
         } else {
             this.isPlaying = false;
@@ -429,15 +446,21 @@ export default function VideoLectureGenerator({ className }: { className?: strin
         }
     };
 
-    // Synchronous scene play - no await, instant transition
-    const playScene = useCallback((scene: Scene): Promise<void> => {
-        return new Promise((resolve) => {
-            if (!engineRef.current) { resolve(); return; }
-            if (ttsRef.current && scene.narration) {
-                ttsRef.current.speak(scene.narration).catch(() => { });
-            }
-            engineRef.current.playScene(scene, resolve);
+    // Wait for BOTH animation AND TTS to complete before moving to next scene
+    const playScene = useCallback(async (scene: Scene): Promise<void> => {
+        if (!engineRef.current) return;
+
+        // Create promises for both animation and TTS
+        const animationPromise = new Promise<void>((resolve) => {
+            engineRef.current!.playScene(scene, resolve);
         });
+
+        const ttsPromise = (ttsRef.current && scene.narration)
+            ? ttsRef.current.speak(scene.narration).catch(() => { })
+            : Promise.resolve();
+
+        // Wait for BOTH to finish
+        await Promise.all([animationPromise, ttsPromise]);
     }, []);
 
     const playAllScenes = useCallback(async () => {
