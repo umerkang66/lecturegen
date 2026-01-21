@@ -50,41 +50,43 @@ SCENE FORMAT:
   "elements": [5-8 elements]
 }
 
-ELEMENT TYPES (position x:100-700, y:80-520 to stay on screen):
+LAYOUT ZONES (use these to PREVENT OVERLAPPING):
+- TITLE ZONE: y: 80-150 (for headers/titles)
+- EQUATION ZONE: y: 160-250 (for main equations)
+- VISUAL ZONE: y: 260-480 (for shapes, circles, graphs)
+- LABEL ZONE: put labels OUTSIDE shapes, not on top
 
-1. TEXT: {"id":"t1","type":"text","props":{"text":"Hello World","x":400,"y":100},"style":{"fillColor":"#ece6e2","fontSize":36},"animation":{"type":"fadeIn","duration":800,"delay":0}}
+CRITICAL ANTI-OVERLAP RULES:
+1. NEVER place a circle, shape, or graph at the same Y position as text or equations
+2. Keep equations in EQUATION ZONE (y: 160-250)
+3. Keep geometric shapes in VISUAL ZONE (y: 260-480)
+4. Circles should be at y: 350+ (away from equations)
+5. If using a grid, put it behind everything (delay: 0)
+6. Space elements at least 80px apart vertically
 
-2. EQUATION (use SIMPLE notation - Unicode preferred):
-   GOOD: "a² + b² = c²", "E = mc²", "πr²", "θ = 45°", "∫f(x)dx", "Σn", "√2", "∞"
-   BAD: Complex LaTeX like "\\frac{}", "\\begin{matrix}"
-   {"id":"eq1","type":"equation","props":{"equation":"a² + b² = c²","x":400,"y":200},"style":{"fillColor":"#58c4dd","fontSize":42,"glow":true,"glowColor":"#58c4dd"},"animation":{"type":"fadeIn","duration":1000,"delay":500}}
+ELEMENT TYPES:
 
-3. CIRCLE: {"id":"c1","type":"circle","props":{"x":400,"y":300,"radius":80},"style":{"strokeColor":"#5cd0b3","strokeWidth":3,"glow":true},"animation":{"type":"draw","duration":1200,"delay":200}}
+1. TEXT: {"id":"t1","type":"text","props":{"text":"Title","x":400,"y":100},"style":{"fillColor":"#ece6e2","fontSize":36},"animation":{"type":"fadeIn","duration":800,"delay":0}}
 
-4. LINE: {"id":"l1","type":"line","props":{"x1":200,"y1":300,"x2":600,"y2":300},"style":{"strokeColor":"#888888","strokeWidth":2},"animation":{"type":"draw","duration":600,"delay":0}}
+2. EQUATION: {"id":"eq1","type":"equation","props":{"equation":"a² + b² = c²","x":400,"y":200},"style":{"fillColor":"#58c4dd","fontSize":42,"glow":true},"animation":{"type":"fadeIn","duration":1000,"delay":500}}
 
-5. ARROW: {"id":"a1","type":"arrow","props":{"x1":400,"y1":400,"x2":550,"y2":250},"style":{"strokeColor":"#fc6255","strokeWidth":3},"animation":{"type":"draw","duration":800,"delay":400}}
+3. CIRCLE: {"id":"c1","type":"circle","props":{"x":400,"y":380,"radius":80},"style":{"strokeColor":"#5cd0b3","strokeWidth":3},"animation":{"type":"draw","duration":1200,"delay":200}}
 
-6. GRAPH: {"id":"g1","type":"graph","props":{"fn":"sin(x)","xMin":-6,"xMax":6,"xScale":40,"yScale":40,"originX":400,"originY":350},"style":{"strokeColor":"#58c4dd","strokeWidth":3,"glow":true},"animation":{"type":"draw","duration":2000,"delay":600}}
+4. LINE: {"id":"l1","type":"line","props":{"x1":200,"y1":350,"x2":600,"y2":350},"style":{"strokeColor":"#888888","strokeWidth":2},"animation":{"type":"draw","duration":600,"delay":0}}
 
-7. SHAPE (polygon): {"id":"s1","type":"shape","props":{"points":[{"x":300,"y":400},{"x":500,"y":400},{"x":400,"y":200}]},"style":{"strokeColor":"#ffff00","strokeWidth":2,"fillColor":"rgba(255,255,0,0.1)"},"animation":{"type":"draw","duration":1200,"delay":300}}
+5. ARROW: {"id":"a1","type":"arrow","props":{"x1":300,"y1":400,"x2":500,"y2":300},"style":{"strokeColor":"#fc6255","strokeWidth":3},"animation":{"type":"draw","duration":800,"delay":400}}
 
-8. GRID: {"id":"grid1","type":"grid","props":{"originX":400,"originY":300,"width":500,"height":350,"spacing":50},"style":{"strokeColor":"#444444","opacity":0.4},"animation":{"type":"fadeIn","duration":600,"delay":0}}
+6. GRAPH: {"id":"g1","type":"graph","props":{"fn":"sin(x)","xMin":-6,"xMax":6,"xScale":40,"yScale":40,"originX":400,"originY":380},"style":{"strokeColor":"#58c4dd","strokeWidth":3},"animation":{"type":"draw","duration":2000,"delay":600}}
 
-9. NUMBER: {"id":"n1","type":"number","props":{"value":3.14159,"x":400,"y":250,"decimals":2},"style":{"fillColor":"#ffff00","fontSize":48},"animation":{"type":"fadeIn","duration":1500,"delay":800}}
+7. SHAPE: {"id":"s1","type":"shape","props":{"points":[{"x":250,"y":480},{"x":550,"y":480},{"x":400,"y":280}]},"style":{"strokeColor":"#ffff00","strokeWidth":2},"animation":{"type":"draw","duration":1200,"delay":300}}
 
-COLORS: #58c4dd (blue), #5cd0b3 (teal), #83c167 (green), #ffff00 (yellow), #e1a158 (gold), #fc6255 (red), #9a72ac (purple), #ece6e2 (white), #888888 (gray)
+8. GRID: {"id":"grid1","type":"grid","props":{"originX":400,"originY":380,"width":500,"height":250,"spacing":50},"style":{"strokeColor":"#444444","opacity":0.3},"animation":{"type":"fadeIn","duration":400,"delay":0}}
 
-ANIMATION TYPES: fadeIn, fadeOut, draw (for lines/shapes/circles), typewriter (for text), scale
+COLORS: #58c4dd (blue), #5cd0b3 (teal), #83c167 (green), #ffff00 (yellow), #e1a158 (gold), #fc6255 (red), #9a72ac (purple), #ece6e2 (white)
 
-REQUIREMENTS:
-- Generate EXACTLY ${sceneCount} scenes
-- Keep equations SIMPLE using Unicode: ², ³, π, θ, α, β, γ, λ, σ, Σ, ∫, √, ∞, ≈, ≠, ≤, ≥, →, ×, ÷, ±
-- Position elements to stay ON SCREEN (x: 100-700, y: 80-520)
-- Stagger animation delays within each scene
-- Build visual complexity gradually across scenes
+Use SIMPLE Unicode for equations: ², ³, π, θ, α, β, γ, λ, Σ, ∫, √, ∞, ≈, ≠, ≤, ≥, →, ×, ÷, ±
 
-Start with title scene, then explain concepts step by step with visuals.`;
+Generate EXACTLY ${sceneCount} scenes. Start with title, then build concepts step by step.`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
