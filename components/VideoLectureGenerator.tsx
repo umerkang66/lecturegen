@@ -132,6 +132,15 @@ class FastAnimationEngine {
             case 'shape': this.drawShape(el, p); break;
             case 'number': this.drawNumber(el, p); break;
             case 'grid': this.drawGrid(el, p); break;
+            // Chemistry & Biology elements
+            case 'atom': this.drawAtom(el, p); break;
+            case 'molecule': this.drawMolecule(el, p); break;
+            case 'bond': this.drawBond(el, p); break;
+            case 'rect': this.drawRect(el, p); break;
+            case 'ellipse': this.drawEllipse(el, p); break;
+            case 'dna': this.drawDna(el, p); break;
+            case 'flowbox': this.drawFlowbox(el, p); break;
+            case 'reactionArrow': this.drawReactionArrow(el, p); break;
         }
         this.ctx.restore();
     }
@@ -470,6 +479,363 @@ class FastAnimationEngine {
             this.ctx.moveTo(originX - hw, originY + y);
             this.ctx.lineTo(originX + hw, originY + y);
             this.ctx.stroke();
+        }
+    }
+
+    // === NEW CHEMISTRY & BIOLOGY ELEMENTS ===
+
+    // Atom: Circle with element label inside
+    private drawAtom(el: Scene['elements'][0], p: number) {
+        const { x, y, radius, symbol, electrons } = el.props as { x: number; y: number; radius: number; symbol: string; electrons?: number };
+        const s = el.style || {};
+        const scale = el.animation?.type === 'scale' ? p : 1;
+        const r = radius * scale;
+
+        // Draw outer glow
+        if (s.glow) {
+            this.ctx.shadowColor = (s.glowColor as string) || (s.fillColor as string) || COLORS.blue;
+            this.ctx.shadowBlur = 20;
+        }
+
+        // Draw atom circle
+        this.ctx.beginPath();
+        this.ctx.arc(x, y, r, 0, Math.PI * 2);
+        this.ctx.fillStyle = (s.fillColor as string) || '#2a4a6a';
+        this.ctx.fill();
+        this.ctx.strokeStyle = (s.strokeColor as string) || COLORS.blue;
+        this.ctx.lineWidth = (s.strokeWidth as number) || 2;
+        this.ctx.stroke();
+        this.ctx.shadowBlur = 0;
+
+        // Draw element symbol
+        if (symbol) {
+            const fontSize = Math.min(r * 0.8, 28);
+            this.ctx.font = `bold ${fontSize}px Arial`;
+            this.ctx.fillStyle = (s.textColor as string) || '#fff';
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'middle';
+            this.ctx.fillText(symbol, x, y);
+        }
+
+        // Draw electron shells if specified
+        if (electrons && electrons > 0) {
+            const shellRadius = r + 15;
+            this.ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+            this.ctx.lineWidth = 1;
+            this.ctx.beginPath();
+            this.ctx.arc(x, y, shellRadius, 0, Math.PI * 2);
+            this.ctx.stroke();
+
+            // Draw electrons
+            const eCount = Math.min(electrons, 8);
+            for (let i = 0; i < eCount; i++) {
+                const angle = (i / eCount) * Math.PI * 2 - Math.PI / 2;
+                const ex = x + Math.cos(angle) * shellRadius;
+                const ey = y + Math.sin(angle) * shellRadius;
+                this.ctx.beginPath();
+                this.ctx.arc(ex, ey, 4, 0, Math.PI * 2);
+                this.ctx.fillStyle = COLORS.yellow;
+                this.ctx.fill();
+            }
+        }
+    }
+
+    // Molecule: Group of connected atoms
+    private drawMolecule(el: Scene['elements'][0], p: number) {
+        const { atoms, bonds } = el.props as {
+            atoms: { x: number; y: number; symbol: string; color?: string }[];
+            bonds: { from: number; to: number; type?: number }[];
+        };
+        const s = el.style || {};
+        const atomRadius = 25;
+
+        // Draw bonds first (behind atoms)
+        if (bonds) {
+            const bondProgress = Math.min(p * 2, 1);
+            for (const bond of bonds) {
+                const a1 = atoms[bond.from];
+                const a2 = atoms[bond.to];
+                if (!a1 || !a2) continue;
+
+                const dx = a2.x - a1.x;
+                const dy = a2.y - a1.y;
+                const len = Math.sqrt(dx * dx + dy * dy);
+                const nx = -dy / len * 4;
+                const ny = dx / len * 4;
+
+                const bondType = bond.type || 1;
+                this.ctx.strokeStyle = (s.bondColor as string) || '#888';
+                this.ctx.lineWidth = 3;
+
+                for (let b = 0; b < bondType; b++) {
+                    const offset = (b - (bondType - 1) / 2) * 6;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(a1.x + nx * offset, a1.y + ny * offset);
+                    const endX = a1.x + dx * bondProgress + nx * offset;
+                    const endY = a1.y + dy * bondProgress + ny * offset;
+                    this.ctx.lineTo(endX, endY);
+                    this.ctx.stroke();
+                }
+            }
+        }
+
+        // Draw atoms
+        const atomProgress = p;
+        for (const atom of atoms) {
+            const scale = Math.min(atomProgress * 1.5, 1);
+            this.ctx.beginPath();
+            this.ctx.arc(atom.x, atom.y, atomRadius * scale, 0, Math.PI * 2);
+            this.ctx.fillStyle = atom.color || (s.atomColor as string) || '#3a5a7a';
+            this.ctx.fill();
+            this.ctx.strokeStyle = '#fff';
+            this.ctx.lineWidth = 2;
+            this.ctx.stroke();
+
+            // Symbol
+            if (scale > 0.5) {
+                this.ctx.font = 'bold 18px Arial';
+                this.ctx.fillStyle = '#fff';
+                this.ctx.textAlign = 'center';
+                this.ctx.textBaseline = 'middle';
+                this.ctx.fillText(atom.symbol, atom.x, atom.y);
+            }
+        }
+    }
+
+    // Bond: Single/double/triple bond line
+    private drawBond(el: Scene['elements'][0], p: number) {
+        const { x1, y1, x2, y2, type } = el.props as { x1: number; y1: number; x2: number; y2: number; type?: number };
+        const s = el.style || {};
+        const bondType = type || 1;
+
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        const len = Math.sqrt(dx * dx + dy * dy);
+        const nx = -dy / len * 4;
+        const ny = dx / len * 4;
+
+        const drawX = el.animation?.type === 'draw' ? x1 + dx * p : x2;
+        const drawY = el.animation?.type === 'draw' ? y1 + dy * p : y2;
+
+        this.ctx.strokeStyle = (s.strokeColor as string) || '#888';
+        this.ctx.lineWidth = (s.strokeWidth as number) || 3;
+        this.ctx.lineCap = 'round';
+
+        for (let b = 0; b < bondType; b++) {
+            const offset = (b - (bondType - 1) / 2) * 6;
+            this.ctx.beginPath();
+            this.ctx.moveTo(x1 + nx * offset, y1 + ny * offset);
+            this.ctx.lineTo(drawX + nx * offset, drawY + ny * offset);
+            this.ctx.stroke();
+        }
+    }
+
+    // Rectangle: For cells, organelles, boxes
+    private drawRect(el: Scene['elements'][0], p: number) {
+        const { x, y, width, height, cornerRadius } = el.props as { x: number; y: number; width: number; height: number; cornerRadius?: number };
+        const s = el.style || {};
+        const scale = el.animation?.type === 'scale' ? p : 1;
+        const w = width * scale;
+        const h = height * scale;
+        const r = cornerRadius || 0;
+
+        this.ctx.beginPath();
+        if (r > 0) {
+            // Rounded rectangle
+            this.ctx.moveTo(x - w / 2 + r, y - h / 2);
+            this.ctx.lineTo(x + w / 2 - r, y - h / 2);
+            this.ctx.quadraticCurveTo(x + w / 2, y - h / 2, x + w / 2, y - h / 2 + r);
+            this.ctx.lineTo(x + w / 2, y + h / 2 - r);
+            this.ctx.quadraticCurveTo(x + w / 2, y + h / 2, x + w / 2 - r, y + h / 2);
+            this.ctx.lineTo(x - w / 2 + r, y + h / 2);
+            this.ctx.quadraticCurveTo(x - w / 2, y + h / 2, x - w / 2, y + h / 2 - r);
+            this.ctx.lineTo(x - w / 2, y - h / 2 + r);
+            this.ctx.quadraticCurveTo(x - w / 2, y - h / 2, x - w / 2 + r, y - h / 2);
+        } else {
+            this.ctx.rect(x - w / 2, y - h / 2, w, h);
+        }
+
+        if (s.fillColor) {
+            this.ctx.fillStyle = s.fillColor as string;
+            this.ctx.fill();
+        }
+        if (s.strokeColor) {
+            this.ctx.strokeStyle = s.strokeColor as string;
+            this.ctx.lineWidth = (s.strokeWidth as number) || 2;
+            this.ctx.stroke();
+        }
+    }
+
+    // Ellipse: For cells, organelles
+    private drawEllipse(el: Scene['elements'][0], p: number) {
+        const { x, y, radiusX, radiusY } = el.props as { x: number; y: number; radiusX: number; radiusY: number };
+        const s = el.style || {};
+        const scale = el.animation?.type === 'scale' ? p : 1;
+
+        this.ctx.beginPath();
+        this.ctx.ellipse(x, y, radiusX * scale, radiusY * scale, 0, 0, Math.PI * 2);
+
+        if (s.fillColor) {
+            this.ctx.fillStyle = s.fillColor as string;
+            this.ctx.fill();
+        }
+        if (s.strokeColor) {
+            this.ctx.strokeStyle = s.strokeColor as string;
+            this.ctx.lineWidth = (s.strokeWidth as number) || 2;
+            this.ctx.stroke();
+        }
+    }
+
+    // DNA Double Helix
+    private drawDna(el: Scene['elements'][0], p: number) {
+        const { x, y, width, height, turns } = el.props as { x: number; y: number; width: number; height: number; turns?: number };
+        const s = el.style || {};
+        const numTurns = turns || 3;
+        const steps = 100;
+        const amplitude = width / 2;
+
+        const drawSteps = Math.floor(steps * p);
+
+        // Draw the two helical strands
+        ['#fc6255', '#58c4dd'].forEach((color, strand) => {
+            this.ctx.beginPath();
+            this.ctx.strokeStyle = color;
+            this.ctx.lineWidth = 3;
+
+            for (let i = 0; i <= drawSteps; i++) {
+                const t = i / steps;
+                const yPos = y - height / 2 + t * height;
+                const phase = strand * Math.PI;
+                const xPos = x + Math.sin(t * numTurns * Math.PI * 2 + phase) * amplitude;
+
+                if (i === 0) this.ctx.moveTo(xPos, yPos);
+                else this.ctx.lineTo(xPos, yPos);
+            }
+            this.ctx.stroke();
+        });
+
+        // Draw base pair connections
+        this.ctx.strokeStyle = (s.strokeColor as string) || '#888';
+        this.ctx.lineWidth = 2;
+        const pairCount = Math.floor(numTurns * 4 * p);
+        for (let i = 0; i < pairCount; i++) {
+            const t = i / (numTurns * 4);
+            const yPos = y - height / 2 + t * height;
+            const x1 = x + Math.sin(t * numTurns * Math.PI * 2) * amplitude;
+            const x2 = x + Math.sin(t * numTurns * Math.PI * 2 + Math.PI) * amplitude;
+            this.ctx.beginPath();
+            this.ctx.moveTo(x1, yPos);
+            this.ctx.lineTo(x2, yPos);
+            this.ctx.stroke();
+        }
+    }
+
+    // Flowbox: Labeled box for flowcharts/processes
+    private drawFlowbox(el: Scene['elements'][0], p: number) {
+        const { x, y, width, height, label, type } = el.props as { x: number; y: number; width: number; height: number; label: string; type?: string };
+        const s = el.style || {};
+        const scale = el.animation?.type === 'scale' ? p : 1;
+        const w = width * scale;
+        const h = height * scale;
+
+        this.ctx.beginPath();
+
+        if (type === 'diamond') {
+            // Decision diamond
+            this.ctx.moveTo(x, y - h / 2);
+            this.ctx.lineTo(x + w / 2, y);
+            this.ctx.lineTo(x, y + h / 2);
+            this.ctx.lineTo(x - w / 2, y);
+            this.ctx.closePath();
+        } else if (type === 'oval') {
+            // Start/end oval
+            this.ctx.ellipse(x, y, w / 2, h / 2, 0, 0, Math.PI * 2);
+        } else {
+            // Default rectangle with rounded corners
+            const r = 8;
+            this.ctx.moveTo(x - w / 2 + r, y - h / 2);
+            this.ctx.lineTo(x + w / 2 - r, y - h / 2);
+            this.ctx.quadraticCurveTo(x + w / 2, y - h / 2, x + w / 2, y - h / 2 + r);
+            this.ctx.lineTo(x + w / 2, y + h / 2 - r);
+            this.ctx.quadraticCurveTo(x + w / 2, y + h / 2, x + w / 2 - r, y + h / 2);
+            this.ctx.lineTo(x - w / 2 + r, y + h / 2);
+            this.ctx.quadraticCurveTo(x - w / 2, y + h / 2, x - w / 2, y + h / 2 - r);
+            this.ctx.lineTo(x - w / 2, y - h / 2 + r);
+            this.ctx.quadraticCurveTo(x - w / 2, y - h / 2, x - w / 2 + r, y - h / 2);
+        }
+
+        this.ctx.fillStyle = (s.fillColor as string) || 'rgba(88,196,221,0.2)';
+        this.ctx.fill();
+        this.ctx.strokeStyle = (s.strokeColor as string) || COLORS.blue;
+        this.ctx.lineWidth = (s.strokeWidth as number) || 2;
+        this.ctx.stroke();
+
+        // Draw label
+        if (label && scale > 0.5) {
+            const fontSize = (s.fontSize as number) || 16;
+            this.ctx.font = `${fontSize}px Arial`;
+            this.ctx.fillStyle = (s.textColor as string) || COLORS.white;
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'middle';
+            this.ctx.fillText(label, x, y);
+        }
+    }
+
+    // Reaction arrow (for chemistry)
+    private drawReactionArrow(el: Scene['elements'][0], p: number) {
+        const { x1, y1, x2, y2, reversible, label } = el.props as { x1: number; y1: number; x2: number; y2: number; reversible?: boolean; label?: string };
+        const s = el.style || {};
+
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        const drawX = el.animation?.type === 'draw' ? x1 + dx * p : x2;
+        const drawY = el.animation?.type === 'draw' ? y1 + dy * p : y2;
+
+        this.ctx.strokeStyle = (s.strokeColor as string) || COLORS.white;
+        this.ctx.lineWidth = (s.strokeWidth as number) || 3;
+        this.ctx.lineCap = 'round';
+
+        // Main arrow line
+        this.ctx.beginPath();
+        this.ctx.moveTo(x1, y1);
+        this.ctx.lineTo(drawX, drawY);
+        this.ctx.stroke();
+
+        // Arrow head
+        if (p > 0.8) {
+            const angle = Math.atan2(dy, dx);
+            const headLen = 15;
+            this.ctx.beginPath();
+            this.ctx.moveTo(drawX, drawY);
+            this.ctx.lineTo(drawX - headLen * Math.cos(angle - Math.PI / 6), drawY - headLen * Math.sin(angle - Math.PI / 6));
+            this.ctx.moveTo(drawX, drawY);
+            this.ctx.lineTo(drawX - headLen * Math.cos(angle + Math.PI / 6), drawY - headLen * Math.sin(angle + Math.PI / 6));
+            this.ctx.stroke();
+
+            // Reverse arrow for equilibrium
+            if (reversible) {
+                const midX = (x1 + x2) / 2;
+                const midY = (y1 + y2) / 2 + 15;
+                this.ctx.beginPath();
+                this.ctx.moveTo(midX + 30, midY);
+                this.ctx.lineTo(midX - 30, midY);
+                this.ctx.stroke();
+                this.ctx.beginPath();
+                this.ctx.moveTo(midX - 30, midY);
+                this.ctx.lineTo(midX - 20, midY - 5);
+                this.ctx.moveTo(midX - 30, midY);
+                this.ctx.lineTo(midX - 20, midY + 5);
+                this.ctx.stroke();
+            }
+        }
+
+        // Label above arrow
+        if (label && p > 0.5) {
+            this.ctx.font = '14px Arial';
+            this.ctx.fillStyle = (s.textColor as string) || COLORS.white;
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'bottom';
+            this.ctx.fillText(label, (x1 + x2) / 2, Math.min(y1, y2) - 10);
         }
     }
 }

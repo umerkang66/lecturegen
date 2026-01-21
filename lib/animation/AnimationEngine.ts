@@ -11,7 +11,7 @@ export interface Point {
 
 export interface AnimationElement {
   id: string;
-  type: 'circle' | 'line' | 'arrow' | 'text' | 'equation' | 'graph' | 'shape' | 'number' | 'grid';
+  type: 'circle' | 'line' | 'arrow' | 'text' | 'equation' | 'graph' | 'shape' | 'number' | 'grid' | 'atom' | 'molecule' | 'bond' | 'rect' | 'ellipse' | 'dna' | 'flowbox' | 'reactionArrow';
   props: Record<string, unknown>;
   style: ElementStyle;
   animation?: ElementAnimation;
@@ -27,6 +27,10 @@ export interface ElementStyle {
   glow?: boolean;
   glowColor?: string;
   glowIntensity?: number;
+  // New properties for chemistry/biology
+  textColor?: string;
+  atomColor?: string;
+  bondColor?: string;
 }
 
 export interface ElementAnimation {
