@@ -11,7 +11,7 @@ export interface Point {
 
 export interface AnimationElement {
   id: string;
-  type: 'circle' | 'line' | 'arrow' | 'text' | 'equation' | 'graph' | 'shape' | 'number' | 'grid' | 'atom' | 'molecule' | 'bond' | 'rect' | 'ellipse' | 'dna' | 'flowbox' | 'reactionArrow';
+  type: 'circle' | 'line' | 'arrow' | 'text' | 'equation' | 'graph' | 'shape' | 'number' | 'grid' | 'atom' | 'molecule' | 'bond' | 'rect' | 'ellipse' | 'dna' | 'flowbox' | 'reactionArrow' | 'pendulum' | 'spring' | 'wave' | 'vector' | 'matrix' | 'tree' | 'cell_membrane' | 'protein' | 'orbital';
   props: Record<string, unknown>;
   style: ElementStyle;
   animation?: ElementAnimation;
@@ -34,7 +34,7 @@ export interface ElementStyle {
 }
 
 export interface ElementAnimation {
-  type: 'fadeIn' | 'fadeOut' | 'draw' | 'morph' | 'move' | 'scale' | 'pulse' | 'typewriter';
+  type: 'fadeIn' | 'fadeOut' | 'draw' | 'morph' | 'move' | 'scale' | 'pulse' | 'typewriter' | 'oscillate';
   duration: number; // milliseconds
   delay?: number;
   easing?: 'linear' | 'easeIn' | 'easeOut' | 'easeInOut' | 'elastic' | 'bounce';

@@ -72,32 +72,50 @@ LAYOUT RULES (CRITICAL - NO OVERLAPPING):
 4. ARROW: {"id":"a1","type":"arrow","props":{"x1":200,"y1":350,"x2":400,"y2":350},"style":{"strokeColor":"#fc6255","strokeWidth":3},"animation":{"type":"draw","duration":800,"delay":400}}
 5. GRAPH (functions: sin(x), cos(x), x^2, log(x), exp(x)): {"id":"g1","type":"graph","props":{"fn":"sin(x)","xMin":-6,"xMax":6,"xScale":40,"yScale":40,"originX":400,"originY":400},"style":{"strokeColor":"#58c4dd","strokeWidth":3},"animation":{"type":"draw","duration":2000,"delay":600}}
 6. SHAPE: {"id":"s1","type":"shape","props":{"points":[{"x":250,"y":500},{"x":550,"y":500},{"x":400,"y":320}]},"style":{"strokeColor":"#ffff00","strokeWidth":2},"animation":{"type":"draw","duration":1200,"delay":300}}
+7. PENDULUM (for oscillation/mechanics): {"id":"pend1","type":"pendulum","props":{"x":400,"y":150,"length":180,"angle":30,"bobRadius":25},"style":{"fillColor":"#58c4dd","strokeColor":"#888"},"animation":{"type":"oscillate","duration":3000,"delay":200}}
+8. SPRING (for Hooke's law): {"id":"spr1","type":"spring","props":{"x":400,"y":150,"length":200,"coils":8,"compression":0.7},"style":{"strokeColor":"#ffff00","fillColor":"#fc6255"},"animation":{"type":"oscillate","duration":2500,"delay":300}}
+9. WAVE (for wave physics): {"id":"wave1","type":"wave","props":{"x":100,"y":350,"width":600,"amplitude":50,"wavelength":120},"style":{"strokeColor":"#58c4dd","strokeWidth":3},"animation":{"type":"draw","duration":2000,"delay":400}}
+10. VECTOR (with components): {"id":"vec1","type":"vector","props":{"x":200,"y":400,"dx":200,"dy":-150,"showComponents":true,"label":"F"},"style":{"strokeColor":"#5cd0b3","strokeWidth":4},"animation":{"type":"draw","duration":1200,"delay":300}}
+11. MATRIX (for linear algebra): {"id":"mat1","type":"matrix","props":{"x":300,"y":280,"values":[[1,2],[3,4]],"cellSize":50},"style":{"fillColor":"#58c4dd","strokeColor":"#ece6e2","fontSize":24},"animation":{"type":"fadeIn","duration":1500,"delay":400}}
+12. TREE (for data structures/algorithms): {"id":"tree1","type":"tree","props":{"x":400,"y":200,"nodes":[{"value":"8","children":[1,2]},{"value":"4","children":[3,4]},{"value":"12"},{"value":"2"},{"value":"6"}],"nodeRadius":25},"style":{"fillColor":"rgba(88,196,221,0.3)","strokeColor":"#58c4dd","textColor":"#ece6e2"},"animation":{"type":"fadeIn","duration":2000,"delay":300}}
 
 === CHEMISTRY ELEMENTS ===
-7. ATOM (with element symbol): {"id":"atom1","type":"atom","props":{"x":300,"y":350,"radius":40,"symbol":"C","electrons":4},"style":{"fillColor":"#2a4a6a","strokeColor":"#58c4dd","textColor":"#fff"},"animation":{"type":"scale","duration":800,"delay":200}}
-8. MOLECULE (group of atoms with bonds): {"id":"mol1","type":"molecule","props":{"atoms":[{"x":300,"y":350,"symbol":"H","color":"#58c4dd"},{"x":400,"y":350,"symbol":"O","color":"#fc6255"},{"x":500,"y":350,"symbol":"H","color":"#58c4dd"}],"bonds":[{"from":0,"to":1,"type":1},{"from":1,"to":2,"type":1}]},"style":{},"animation":{"type":"fadeIn","duration":1500,"delay":400}}
-9. BOND (single/double/triple): {"id":"b1","type":"bond","props":{"x1":300,"y1":350,"x2":400,"y2":350,"type":2},"style":{"strokeColor":"#888"},"animation":{"type":"draw","duration":600,"delay":200}}
-10. REACTION ARROW: {"id":"rxn1","type":"reactionArrow","props":{"x1":200,"y1":350,"x2":600,"y2":350,"reversible":false,"label":"heat"},"style":{"strokeColor":"#ece6e2"},"animation":{"type":"draw","duration":1000,"delay":500}}
+13. ATOM (with element symbol): {"id":"atom1","type":"atom","props":{"x":300,"y":350,"radius":40,"symbol":"C","electrons":4},"style":{"fillColor":"#2a4a6a","strokeColor":"#58c4dd","textColor":"#fff"},"animation":{"type":"scale","duration":800,"delay":200}}
+14. MOLECULE (group of atoms with bonds): {"id":"mol1","type":"molecule","props":{"atoms":[{"x":300,"y":350,"symbol":"H","color":"#58c4dd"},{"x":400,"y":350,"symbol":"O","color":"#fc6255"},{"x":500,"y":350,"symbol":"H","color":"#58c4dd"}],"bonds":[{"from":0,"to":1,"type":1},{"from":1,"to":2,"type":1}]},"style":{},"animation":{"type":"fadeIn","duration":1500,"delay":400}}
+15. BOND (single/double/triple): {"id":"b1","type":"bond","props":{"x1":300,"y1":350,"x2":400,"y2":350,"type":2},"style":{"strokeColor":"#888"},"animation":{"type":"draw","duration":600,"delay":200}}
+16. REACTION ARROW: {"id":"rxn1","type":"reactionArrow","props":{"x1":200,"y1":350,"x2":600,"y2":350,"reversible":false,"label":"heat"},"style":{"strokeColor":"#ece6e2"},"animation":{"type":"draw","duration":1000,"delay":500}}
+17. ORBITAL (electron orbitals s/p/d): {"id":"orb1","type":"orbital","props":{"x":400,"y":350,"type":"p","size":80},"style":{"fillColor":"rgba(252,98,85,0.5)","strokeColor":"#fc6255"},"animation":{"type":"scale","duration":1500,"delay":400}}
 
 === BIOLOGY ELEMENTS ===
-11. ELLIPSE (for cells): {"id":"cell1","type":"ellipse","props":{"x":400,"y":350,"radiusX":150,"radiusY":80},"style":{"fillColor":"rgba(92,208,179,0.2)","strokeColor":"#5cd0b3","strokeWidth":3},"animation":{"type":"scale","duration":1000,"delay":200}}
-12. RECT (for organelles, boxes): {"id":"r1","type":"rect","props":{"x":400,"y":350,"width":120,"height":60,"cornerRadius":8},"style":{"fillColor":"rgba(88,196,221,0.3)","strokeColor":"#58c4dd"},"animation":{"type":"scale","duration":800,"delay":400}}
-13. DNA HELIX: {"id":"dna1","type":"dna","props":{"x":400,"y":350,"width":80,"height":200,"turns":3},"style":{"strokeColor":"#888"},"animation":{"type":"draw","duration":2500,"delay":300}}
-14. FLOWBOX (for processes): {"id":"fb1","type":"flowbox","props":{"x":400,"y":350,"width":140,"height":50,"label":"Transcription","type":"rect"},"style":{"fillColor":"rgba(88,196,221,0.2)","strokeColor":"#58c4dd","textColor":"#ece6e2"},"animation":{"type":"scale","duration":800,"delay":200}}
+18. ELLIPSE (for cells): {"id":"cell1","type":"ellipse","props":{"x":400,"y":350,"radiusX":150,"radiusY":80},"style":{"fillColor":"rgba(92,208,179,0.2)","strokeColor":"#5cd0b3","strokeWidth":3},"animation":{"type":"scale","duration":1000,"delay":200}}
+19. RECT (for organelles, boxes): {"id":"r1","type":"rect","props":{"x":400,"y":350,"width":120,"height":60,"cornerRadius":8},"style":{"fillColor":"rgba(88,196,221,0.3)","strokeColor":"#58c4dd"},"animation":{"type":"scale","duration":800,"delay":400}}
+20. DNA HELIX: {"id":"dna1","type":"dna","props":{"x":400,"y":350,"width":80,"height":200,"turns":3},"style":{"strokeColor":"#888"},"animation":{"type":"draw","duration":2500,"delay":300}}
+21. FLOWBOX (for processes): {"id":"fb1","type":"flowbox","props":{"x":400,"y":350,"width":140,"height":50,"label":"Transcription","type":"rect"},"style":{"fillColor":"rgba(88,196,221,0.2)","strokeColor":"#58c4dd","textColor":"#ece6e2"},"animation":{"type":"scale","duration":800,"delay":200}}
+22. CELL MEMBRANE (phospholipid bilayer): {"id":"mem1","type":"cell_membrane","props":{"x":150,"y":280,"width":500,"height":100},"style":{"fillColor":"#58c4dd","strokeColor":"#ffff00"},"animation":{"type":"draw","duration":2500,"delay":300}}
+23. PROTEIN (folded chain): {"id":"prot1","type":"protein","props":{"x":150,"y":350,"length":500,"folds":6},"style":{},"animation":{"type":"draw","duration":2500,"delay":400}}
 
 COLORS: #58c4dd (blue), #5cd0b3 (teal), #83c167 (green), #ffff00 (yellow), #e1a158 (gold), #fc6255 (red), #9a72ac (purple), #ece6e2 (white)
 
 DOMAIN RULES (STRICT - MUST FOLLOW):
-- MATH/PHYSICS/COMPUTER SCIENCE topics: ONLY use these elements: text, equation, circle, line, arrow, graph, shape, number, grid, rect, flowbox
-  * DO NOT use: atom, molecule, bond, dna, reactionArrow, ellipse (as cell)
-  * For CS: Use flowbox for algorithms, rect for data structures, graph for complexity
-- CHEMISTRY topics: Use atom, molecule, bond, reactionArrow + text, equation, arrow
-- BIOLOGY topics: Use ellipse (cells), dna, flowbox (processes), rect (organelles) + text, arrow
+- MATH/PHYSICS topics: Use text, equation, circle, line, arrow, graph, shape, number, grid, rect, flowbox, pendulum, spring, wave, vector, matrix
+  * For MECHANICS: Use pendulum, spring, wave, vector
+  * For CALCULUS/ALGEBRA: Use graph, equation, matrix
+  * DO NOT use: atom, molecule, bond, dna, reactionArrow, cell_membrane, protein, orbital
+- COMPUTER SCIENCE topics: Use text, flowbox, rect, tree, matrix, graph, arrow
+  * For DATA STRUCTURES: Use tree, rect, arrow
+  * For ALGORITHMS: Use flowbox, arrow
+  * DO NOT use: atom, molecule, bond, dna, reactionArrow, cell_membrane, protein, orbital, pendulum, spring
+- CHEMISTRY topics: Use atom, molecule, bond, reactionArrow, orbital + text, equation, arrow
+  * For ORBITALS/QUANTUM: Use orbital
+  * For REACTIONS: Use reactionArrow, molecule
+- BIOLOGY topics: Use ellipse (cells), dna, flowbox, rect, cell_membrane, protein + text, arrow
+  * For CELL BIOLOGY: Use cell_membrane, ellipse
+  * For MOLECULAR BIOLOGY: Use dna, protein
 
 REQUIREMENTS:
 1. Generate EXACTLY ${sceneCount} scenes
 2. STRICTLY match element types to the topic domain (see DOMAIN RULES above)
-3. NEVER use atom/molecule/bond/dna in math, physics, or computer science lectures
+3. Use the NEW element types: pendulum/spring/wave for physics, tree/matrix for CS, orbital for chemistry, cell_membrane/protein for biology
 4. Space elements properly - NO OVERLAPPING
 5. Use Unicode: ², ³, π, θ, α, β, Σ, →
 
@@ -300,9 +318,11 @@ function createFallbackLecture(
   const cx = 400, cy = 350;
   const titleLower = title.toLowerCase();
 
-  // Detect topic type
-  const isChemistry = /chem|atom|molecule|bond|reaction|element|compound|ion|acid|base|electron|proton/.test(titleLower);
-  const isBiology = /bio|cell|dna|rna|protein|gene|organism|evolution|photosynthesis|mitosis|enzyme/.test(titleLower);
+  // Detect topic type with more specificity
+  const isPhysics = /physics|pendulum|spring|oscillat|wave|mechanics|motion|velocity|acceleration|force|newton|momentum|energy|gravity|harmonic/.test(titleLower);
+  const isCS = /computer|algorithm|data structure|tree|graph|binary|sort|search|stack|queue|linked list|array|hash|programming|code/.test(titleLower);
+  const isChemistry = /chem|atom|molecule|bond|reaction|element|compound|ion|acid|base|electron|proton|orbital/.test(titleLower);
+  const isBiology = /bio|cell|dna|rna|protein|gene|organism|evolution|photosynthesis|mitosis|enzyme|membrane/.test(titleLower);
 
   interface SceneElement {
     id: string;
@@ -319,7 +339,94 @@ function createFallbackLecture(
 
   let sceneTemplates: SceneTemplate[];
 
-  if (isChemistry) {
+  if (isPhysics) {
+    // Physics-specific templates with new diagrams
+    sceneTemplates = [
+      {
+        narration: `Welcome to our exploration of ${title}. Let's discover the elegant laws of physics.`,
+        elements: [
+          { id: 'title', type: 'text', props: { text: title, x: cx, y: 80 }, style: { fillColor: '#ece6e2', fontSize: 36 }, animation: { type: 'fadeIn', duration: 1200, delay: 0 } },
+          { id: 'subtitle', type: 'text', props: { text: 'Physics in Motion', x: cx, y: 140 }, style: { fillColor: '#58c4dd', fontSize: 24 }, animation: { type: 'fadeIn', duration: 800, delay: 600 } },
+          { id: 'pendulum', type: 'pendulum', props: { x: cx, y: 200, length: 180, angle: 25, bobRadius: 25 }, style: { fillColor: '#58c4dd', strokeColor: '#888' }, animation: { type: 'oscillate', duration: 4000, delay: 1000 } },
+          { id: 'label1', type: 'text', props: { text: 'Simple Pendulum', x: cx, y: 450 }, style: { fillColor: '#5cd0b3', fontSize: 20 }, animation: { type: 'fadeIn', duration: 600, delay: 2500 } },
+          { id: 'equation', type: 'equation', props: { equation: 'T = 2π√(L/g)', x: cx, y: 520 }, style: { fillColor: '#ffff00', fontSize: 28 }, animation: { type: 'fadeIn', duration: 800, delay: 3000 } },
+        ],
+      },
+      {
+        narration: `Springs follow Hooke's Law, where force is proportional to displacement.`,
+        elements: [
+          { id: 'heading', type: 'text', props: { text: "Hooke's Law", x: cx, y: 70 }, style: { fillColor: '#ece6e2', fontSize: 32 }, animation: { type: 'fadeIn', duration: 800, delay: 0 } },
+          { id: 'equation', type: 'equation', props: { equation: 'F = -kx', x: cx, y: 130 }, style: { fillColor: '#58c4dd', fontSize: 36 }, animation: { type: 'fadeIn', duration: 1000, delay: 500 } },
+          { id: 'spring', type: 'spring', props: { x: cx, y: 200, length: 200, coils: 10, compression: 0.8 }, style: { strokeColor: '#ffff00', fillColor: '#fc6255' }, animation: { type: 'oscillate', duration: 3500, delay: 1200 } },
+          { id: 'label1', type: 'text', props: { text: 'k = spring constant', x: 180, y: 480 }, style: { fillColor: '#5cd0b3', fontSize: 16 }, animation: { type: 'fadeIn', duration: 500, delay: 2800 } },
+          { id: 'label2', type: 'text', props: { text: 'x = displacement', x: 620, y: 480 }, style: { fillColor: '#e1a158', fontSize: 16 }, animation: { type: 'fadeIn', duration: 500, delay: 3200 } },
+        ],
+      },
+      {
+        narration: `Waves transfer energy through oscillations without transferring matter.`,
+        elements: [
+          { id: 'heading', type: 'text', props: { text: 'Wave Motion', x: cx, y: 70 }, style: { fillColor: '#ece6e2', fontSize: 32 }, animation: { type: 'fadeIn', duration: 800, delay: 0 } },
+          { id: 'wave', type: 'wave', props: { x: 80, y: 280, width: 640, amplitude: 60, wavelength: 160 }, style: { strokeColor: '#58c4dd', strokeWidth: 4 }, animation: { type: 'draw', duration: 3000, delay: 500 } },
+          { id: 'ampLabel', type: 'text', props: { text: 'Amplitude (A)', x: 100, y: 200 }, style: { fillColor: '#ffff00', fontSize: 16 }, animation: { type: 'fadeIn', duration: 500, delay: 2200 } },
+          { id: 'waveLabel', type: 'text', props: { text: 'Wavelength (λ)', x: cx, y: 380 }, style: { fillColor: '#5cd0b3', fontSize: 16 }, animation: { type: 'fadeIn', duration: 500, delay: 2600 } },
+          { id: 'equation', type: 'equation', props: { equation: 'v = fλ', x: cx, y: 480 }, style: { fillColor: '#fc6255', fontSize: 32 }, animation: { type: 'fadeIn', duration: 800, delay: 3200 } },
+          { id: 'note', type: 'text', props: { text: 'velocity = frequency × wavelength', x: cx, y: 530 }, style: { fillColor: '#888', fontSize: 16 }, animation: { type: 'fadeIn', duration: 500, delay: 3800 } },
+        ],
+      },
+      {
+        narration: `Vectors allow us to represent quantities with both magnitude and direction.`,
+        elements: [
+          { id: 'heading', type: 'text', props: { text: 'Vector Components', x: cx, y: 70 }, style: { fillColor: '#ece6e2', fontSize: 32 }, animation: { type: 'fadeIn', duration: 800, delay: 0 } },
+          { id: 'grid', type: 'grid', props: { originX: cx, originY: 350, width: 500, height: 300, spacing: 50 }, style: { strokeColor: '#333333', opacity: 0.3 }, animation: { type: 'fadeIn', duration: 400, delay: 300 } },
+          { id: 'vector', type: 'vector', props: { x: 200, y: 450, dx: 250, dy: -200, showComponents: true, label: 'F' }, style: { strokeColor: '#58c4dd', strokeWidth: 4 }, animation: { type: 'draw', duration: 2000, delay: 600 } },
+          { id: 'fx', type: 'text', props: { text: 'Fₓ', x: 320, y: 480 }, style: { fillColor: '#fc6255', fontSize: 20 }, animation: { type: 'fadeIn', duration: 500, delay: 2400 } },
+          { id: 'fy', type: 'text', props: { text: 'Fᵧ', x: 480, y: 350 }, style: { fillColor: '#83c167', fontSize: 20 }, animation: { type: 'fadeIn', duration: 500, delay: 2700 } },
+          { id: 'equation', type: 'equation', props: { equation: '|F| = √(Fₓ² + Fᵧ²)', x: cx, y: 550 }, style: { fillColor: '#e1a158', fontSize: 24 }, animation: { type: 'fadeIn', duration: 800, delay: 3200 } },
+        ],
+      },
+    ];
+  } else if (isCS) {
+    // Computer Science templates with tree and flowbox
+    sceneTemplates = [
+      {
+        narration: `Welcome to our exploration of ${title}. Let's understand data structures and algorithms.`,
+        elements: [
+          { id: 'title', type: 'text', props: { text: title, x: cx, y: 80 }, style: { fillColor: '#ece6e2', fontSize: 36 }, animation: { type: 'fadeIn', duration: 1200, delay: 0 } },
+          { id: 'subtitle', type: 'text', props: { text: 'Computer Science Fundamentals', x: cx, y: 140 }, style: { fillColor: '#58c4dd', fontSize: 22 }, animation: { type: 'fadeIn', duration: 800, delay: 600 } },
+          { id: 'tree', type: 'tree', props: { x: cx, y: 250, nodes: [{ value: '50', children: [1, 2] }, { value: '30', children: [3, 4] }, { value: '70', children: [5, 6] }, { value: '20' }, { value: '40' }, { value: '60' }, { value: '80' }], nodeRadius: 25 }, style: { fillColor: 'rgba(88,196,221,0.3)', strokeColor: '#58c4dd', textColor: '#ece6e2' }, animation: { type: 'fadeIn', duration: 3000, delay: 1000 } },
+          { id: 'label', type: 'text', props: { text: 'Binary Search Tree', x: cx, y: 540 }, style: { fillColor: '#5cd0b3', fontSize: 22 }, animation: { type: 'fadeIn', duration: 600, delay: 3500 } },
+        ],
+      },
+      {
+        narration: `Matrices are fundamental structures used in linear algebra and computer graphics.`,
+        elements: [
+          { id: 'heading', type: 'text', props: { text: 'Matrix Operations', x: cx, y: 70 }, style: { fillColor: '#ece6e2', fontSize: 32 }, animation: { type: 'fadeIn', duration: 800, delay: 0 } },
+          { id: 'matrix1', type: 'matrix', props: { x: 150, y: 220, values: [[1, 2], [3, 4]], cellSize: 50 }, style: { fillColor: '#58c4dd', strokeColor: '#ece6e2', fontSize: 22 }, animation: { type: 'fadeIn', duration: 1500, delay: 500 } },
+          { id: 'times', type: 'text', props: { text: '×', x: 310, y: 270 }, style: { fillColor: '#ece6e2', fontSize: 36 }, animation: { type: 'fadeIn', duration: 400, delay: 1800 } },
+          { id: 'matrix2', type: 'matrix', props: { x: 380, y: 220, values: [[5, 6], [7, 8]], cellSize: 50 }, style: { fillColor: '#5cd0b3', strokeColor: '#ece6e2', fontSize: 22 }, animation: { type: 'fadeIn', duration: 1500, delay: 2000 } },
+          { id: 'equals', type: 'text', props: { text: '=', x: 540, y: 270 }, style: { fillColor: '#ece6e2', fontSize: 36 }, animation: { type: 'fadeIn', duration: 400, delay: 3300 } },
+          { id: 'result', type: 'matrix', props: { x: 610, y: 220, values: [[19, 22], [43, 50]], cellSize: 50 }, style: { fillColor: '#fc6255', strokeColor: '#ece6e2', fontSize: 22 }, animation: { type: 'fadeIn', duration: 1500, delay: 3500 } },
+          { id: 'note', type: 'text', props: { text: 'O(n³) time complexity for standard multiplication', x: cx, y: 420 }, style: { fillColor: '#888', fontSize: 16 }, animation: { type: 'fadeIn', duration: 600, delay: 4800 } },
+        ],
+      },
+      {
+        narration: `Algorithms are step-by-step procedures for solving computational problems.`,
+        elements: [
+          { id: 'heading', type: 'text', props: { text: 'Algorithm Flow', x: cx, y: 70 }, style: { fillColor: '#ece6e2', fontSize: 28 }, animation: { type: 'fadeIn', duration: 800, delay: 0 } },
+          { id: 'start', type: 'flowbox', props: { x: cx, y: 150, width: 100, height: 40, label: 'Start', type: 'rect' }, style: { fillColor: 'rgba(92,208,179,0.2)', strokeColor: '#5cd0b3', textColor: '#ece6e2' }, animation: { type: 'scale', duration: 600, delay: 400 } },
+          { id: 'arrow1', type: 'arrow', props: { x1: cx, y1: 170, x2: cx, y2: 210 }, style: { strokeColor: '#888', strokeWidth: 2 }, animation: { type: 'draw', duration: 400, delay: 800 } },
+          { id: 'process', type: 'flowbox', props: { x: cx, y: 250, width: 140, height: 40, label: 'Process', type: 'rect' }, style: { fillColor: 'rgba(88,196,221,0.2)', strokeColor: '#58c4dd', textColor: '#ece6e2' }, animation: { type: 'scale', duration: 600, delay: 1000 } },
+          { id: 'arrow2', type: 'arrow', props: { x1: cx, y1: 270, x2: cx, y2: 310 }, style: { strokeColor: '#888', strokeWidth: 2 }, animation: { type: 'draw', duration: 400, delay: 1400 } },
+          { id: 'decision', type: 'flowbox', props: { x: cx, y: 350, width: 130, height: 50, label: 'Condition?', type: 'diamond' }, style: { fillColor: 'rgba(252,98,85,0.2)', strokeColor: '#fc6255', textColor: '#ece6e2' }, animation: { type: 'scale', duration: 600, delay: 1600 } },
+          { id: 'arrow3', type: 'arrow', props: { x1: cx + 65, y1: 350, x2: cx + 150, y2: 350 }, style: { strokeColor: '#5cd0b3', strokeWidth: 2 }, animation: { type: 'draw', duration: 400, delay: 2000 } },
+          { id: 'yes', type: 'text', props: { text: 'Yes', x: cx + 100, y: 330 }, style: { fillColor: '#5cd0b3', fontSize: 14 }, animation: { type: 'fadeIn', duration: 300, delay: 2200 } },
+          { id: 'output', type: 'flowbox', props: { x: cx + 200, y: 350, width: 90, height: 40, label: 'Output', type: 'rect' }, style: { fillColor: 'rgba(154,114,172,0.2)', strokeColor: '#9a72ac', textColor: '#ece6e2' }, animation: { type: 'scale', duration: 600, delay: 2400 } },
+          { id: 'arrow4', type: 'arrow', props: { x1: cx - 65, y1: 350, x2: cx - 120, y2: 250 }, style: { strokeColor: '#fc6255', strokeWidth: 2 }, animation: { type: 'draw', duration: 400, delay: 2800 } },
+          { id: 'no', type: 'text', props: { text: 'No', x: cx - 110, y: 300 }, style: { fillColor: '#fc6255', fontSize: 14 }, animation: { type: 'fadeIn', duration: 300, delay: 3000 } },
+        ],
+      },
+    ];
+  } else if (isChemistry) {
     sceneTemplates = [
       {
         narration: `Welcome to our exploration of ${title}. Let's dive into the fascinating world of chemistry.`,

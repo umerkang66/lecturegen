@@ -141,6 +141,17 @@ class FastAnimationEngine {
             case 'dna': this.drawDna(el, p); break;
             case 'flowbox': this.drawFlowbox(el, p); break;
             case 'reactionArrow': this.drawReactionArrow(el, p); break;
+            // Physics/Math/CS elements
+            case 'pendulum': this.drawPendulum(el, p); break;
+            case 'spring': this.drawSpring(el, p); break;
+            case 'wave': this.drawWave(el, p); break;
+            case 'vector': this.drawVector(el, p); break;
+            case 'matrix': this.drawMatrix(el, p); break;
+            case 'tree': this.drawTree(el, p); break;
+            // Advanced Bio/Chem elements
+            case 'cell_membrane': this.drawCellMembrane(el, p); break;
+            case 'protein': this.drawProtein(el, p); break;
+            case 'orbital': this.drawOrbital(el, p); break;
         }
         this.ctx.restore();
     }
@@ -838,7 +849,571 @@ class FastAnimationEngine {
             this.ctx.fillText(label, (x1 + x2) / 2, Math.min(y1, y2) - 10);
         }
     }
+
+    // === NEW PHYSICS/MATH/CS ELEMENTS ===
+
+    // Pendulum: Animated pendulum for physics
+    private drawPendulum(el: Scene['elements'][0], p: number) {
+        const { x, y, length, angle, bobRadius } = el.props as { x: number; y: number; length: number; angle: number; bobRadius: number };
+        const s = el.style || {};
+
+        // Calculate pendulum position with oscillation animation
+        const maxAngle = (angle || 30) * Math.PI / 180;
+        const oscillate = el.animation?.type === 'oscillate';
+        const currentAngle = oscillate ? maxAngle * Math.sin(p * Math.PI * 4) : maxAngle * p;
+
+        const bobX = x + length * Math.sin(currentAngle);
+        const bobY = y + length * Math.cos(currentAngle);
+
+        // Draw pivot point
+        this.ctx.beginPath();
+        this.ctx.arc(x, y, 6, 0, Math.PI * 2);
+        this.ctx.fillStyle = (s.strokeColor as string) || '#888';
+        this.ctx.fill();
+
+        // Draw rod
+        this.ctx.beginPath();
+        this.ctx.moveTo(x, y);
+        this.ctx.lineTo(bobX, bobY);
+        this.ctx.strokeStyle = (s.strokeColor as string) || '#888';
+        this.ctx.lineWidth = (s.strokeWidth as number) || 3;
+        this.ctx.stroke();
+
+        // Draw bob
+        this.ctx.beginPath();
+        this.ctx.arc(bobX, bobY, bobRadius || 20, 0, Math.PI * 2);
+        this.ctx.fillStyle = (s.fillColor as string) || COLORS.blue;
+        this.ctx.fill();
+        this.ctx.strokeStyle = (s.strokeColor as string) || '#fff';
+        this.ctx.lineWidth = 2;
+        this.ctx.stroke();
+
+        // Draw arc showing swing range
+        if (p > 0.3) {
+            this.ctx.beginPath();
+            this.ctx.arc(x, y, length * 0.3, Math.PI / 2 - maxAngle, Math.PI / 2 + maxAngle);
+            this.ctx.strokeStyle = 'rgba(88,196,221,0.3)';
+            this.ctx.lineWidth = 2;
+            this.ctx.setLineDash([5, 5]);
+            this.ctx.stroke();
+            this.ctx.setLineDash([]);
+        }
+    }
+
+    // Spring: Spring/coil with mass for physics
+    private drawSpring(el: Scene['elements'][0], p: number) {
+        const { x, y, length, coils, compression } = el.props as { x: number; y: number; length: number; coils: number; compression?: number };
+        const s = el.style || {};
+
+        const numCoils = coils || 8;
+        const comp = compression || 1;
+        const oscillate = el.animation?.type === 'oscillate';
+        const dynamicComp = oscillate ? comp + 0.3 * Math.sin(p * Math.PI * 6) : comp * p + (1 - p);
+        const actualLength = length * dynamicComp;
+
+        const coilWidth = 20;
+        const coilSpacing = actualLength / numCoils;
+
+        // Draw spring coils
+        this.ctx.beginPath();
+        this.ctx.moveTo(x, y);
+
+        for (let i = 0; i < numCoils; i++) {
+            const yBase = y + i * coilSpacing;
+            this.ctx.lineTo(x + coilWidth, yBase + coilSpacing * 0.25);
+            this.ctx.lineTo(x - coilWidth, yBase + coilSpacing * 0.75);
+        }
+        this.ctx.lineTo(x, y + actualLength);
+
+        this.ctx.strokeStyle = (s.strokeColor as string) || COLORS.yellow;
+        this.ctx.lineWidth = (s.strokeWidth as number) || 3;
+        this.ctx.stroke();
+
+        // Draw mass at bottom
+        const massSize = 30;
+        this.ctx.fillStyle = (s.fillColor as string) || COLORS.red;
+        this.ctx.fillRect(x - massSize / 2, y + actualLength, massSize, massSize);
+        this.ctx.strokeStyle = '#fff';
+        this.ctx.lineWidth = 2;
+        this.ctx.strokeRect(x - massSize / 2, y + actualLength, massSize, massSize);
+
+        // Draw wall at top
+        this.ctx.fillStyle = '#444';
+        this.ctx.fillRect(x - 30, y - 10, 60, 10);
+        this.ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+            this.ctx.moveTo(x - 25 + i * 10, y - 10);
+            this.ctx.lineTo(x - 30 + i * 10, y - 20);
+        }
+        this.ctx.strokeStyle = '#666';
+        this.ctx.lineWidth = 2;
+        this.ctx.stroke();
+    }
+
+    // Wave: Animated sine/cosine wave propagation
+    private drawWave(el: Scene['elements'][0], p: number) {
+        const { x, y, width, amplitude, wavelength, phase } = el.props as { x: number; y: number; width: number; amplitude: number; wavelength: number; phase?: number };
+        const s = el.style || {};
+
+        const wl = wavelength || 100;
+        const amp = amplitude || 40;
+        const ph = phase || 0;
+        const animPhase = el.animation?.type === 'oscillate' ? p * Math.PI * 4 : 0;
+
+        // Draw wave
+        this.ctx.beginPath();
+        const steps = Math.min(width * p, width);
+        for (let i = 0; i <= steps; i++) {
+            const wx = x + i;
+            const wy = y + amp * Math.sin((i / wl) * Math.PI * 2 + ph + animPhase);
+            if (i === 0) this.ctx.moveTo(wx, wy);
+            else this.ctx.lineTo(wx, wy);
+        }
+
+        this.ctx.strokeStyle = (s.strokeColor as string) || COLORS.blue;
+        this.ctx.lineWidth = (s.strokeWidth as number) || 3;
+        this.ctx.lineCap = 'round';
+        this.ctx.stroke();
+
+        // Draw baseline
+        this.ctx.beginPath();
+        this.ctx.moveTo(x, y);
+        this.ctx.lineTo(x + width, y);
+        this.ctx.strokeStyle = 'rgba(136,136,136,0.3)';
+        this.ctx.lineWidth = 1;
+        this.ctx.setLineDash([5, 5]);
+        this.ctx.stroke();
+        this.ctx.setLineDash([]);
+
+        // Draw amplitude markers
+        if (p > 0.5) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(x + wl / 4, y);
+            this.ctx.lineTo(x + wl / 4, y - amp);
+            this.ctx.strokeStyle = COLORS.yellow;
+            this.ctx.lineWidth = 2;
+            this.ctx.setLineDash([3, 3]);
+            this.ctx.stroke();
+            this.ctx.setLineDash([]);
+
+            this.ctx.font = '14px Arial';
+            this.ctx.fillStyle = COLORS.yellow;
+            this.ctx.textAlign = 'left';
+            this.ctx.fillText('A', x + wl / 4 + 5, y - amp / 2);
+        }
+    }
+
+    // Vector: Styled vector with components
+    private drawVector(el: Scene['elements'][0], p: number) {
+        const { x, y, dx, dy, showComponents, label } = el.props as { x: number; y: number; dx: number; dy: number; showComponents?: boolean; label?: string };
+        const s = el.style || {};
+
+        const endX = x + dx * p;
+        const endY = y + dy * p;
+
+        // Draw components if requested
+        if (showComponents && p > 0.3) {
+            const compAlpha = Math.min((p - 0.3) / 0.3, 1);
+            this.ctx.globalAlpha = compAlpha * 0.5;
+
+            // X component
+            this.ctx.beginPath();
+            this.ctx.moveTo(x, y);
+            this.ctx.lineTo(endX, y);
+            this.ctx.strokeStyle = COLORS.red;
+            this.ctx.lineWidth = 2;
+            this.ctx.setLineDash([5, 5]);
+            this.ctx.stroke();
+
+            // Y component
+            this.ctx.beginPath();
+            this.ctx.moveTo(endX, y);
+            this.ctx.lineTo(endX, endY);
+            this.ctx.strokeStyle = COLORS.green;
+            this.ctx.stroke();
+            this.ctx.setLineDash([]);
+
+            this.ctx.globalAlpha = 1;
+        }
+
+        // Draw main vector
+        this.ctx.beginPath();
+        this.ctx.moveTo(x, y);
+        this.ctx.lineTo(endX, endY);
+        this.ctx.strokeStyle = (s.strokeColor as string) || COLORS.blue;
+        this.ctx.lineWidth = (s.strokeWidth as number) || 4;
+        this.ctx.lineCap = 'round';
+        this.ctx.stroke();
+
+        // Draw arrowhead
+        if (p > 0.8) {
+            const angle = Math.atan2(dy, dx);
+            const headLen = 15;
+            const arrowP = (p - 0.8) / 0.2;
+
+            this.ctx.beginPath();
+            this.ctx.moveTo(endX, endY);
+            this.ctx.lineTo(endX - headLen * Math.cos(angle - Math.PI / 6) * arrowP, endY - headLen * Math.sin(angle - Math.PI / 6) * arrowP);
+            this.ctx.moveTo(endX, endY);
+            this.ctx.lineTo(endX - headLen * Math.cos(angle + Math.PI / 6) * arrowP, endY - headLen * Math.sin(angle + Math.PI / 6) * arrowP);
+            this.ctx.stroke();
+        }
+
+        // Draw label
+        if (label && p > 0.5) {
+            this.ctx.font = 'bold 18px Arial';
+            this.ctx.fillStyle = (s.fillColor as string) || COLORS.white;
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText(label, x + dx / 2 + 15, y + dy / 2 - 10);
+        }
+    }
+
+    // Matrix: Matrix grid with values
+    private drawMatrix(el: Scene['elements'][0], p: number) {
+        const { x, y, values, cellSize } = el.props as { x: number; y: number; values: number[][]; cellSize?: number };
+        const s = el.style || {};
+
+        if (!values || values.length === 0) return;
+
+        const cell = cellSize || 50;
+        const rows = values.length;
+        const cols = values[0].length;
+        const totalWidth = cols * cell;
+        const totalHeight = rows * cell;
+
+        // Draw bracket left
+        this.ctx.beginPath();
+        this.ctx.moveTo(x - 10, y);
+        this.ctx.lineTo(x - 20, y);
+        this.ctx.lineTo(x - 20, y + totalHeight);
+        this.ctx.lineTo(x - 10, y + totalHeight);
+        this.ctx.strokeStyle = (s.strokeColor as string) || COLORS.white;
+        this.ctx.lineWidth = 3;
+        this.ctx.stroke();
+
+        // Draw bracket right
+        this.ctx.beginPath();
+        this.ctx.moveTo(x + totalWidth + 10, y);
+        this.ctx.lineTo(x + totalWidth + 20, y);
+        this.ctx.lineTo(x + totalWidth + 20, y + totalHeight);
+        this.ctx.lineTo(x + totalWidth + 10, y + totalHeight);
+        this.ctx.stroke();
+
+        // Draw values
+        this.ctx.font = `${(s.fontSize as number) || 20}px Arial`;
+        this.ctx.fillStyle = (s.fillColor as string) || COLORS.blue;
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+
+        const revealedCells = Math.floor(rows * cols * p);
+        let cellIndex = 0;
+
+        for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+                if (cellIndex < revealedCells) {
+                    const cx = x + c * cell + cell / 2;
+                    const cy = y + r * cell + cell / 2;
+                    this.ctx.fillText(values[r][c].toString(), cx, cy);
+                }
+                cellIndex++;
+            }
+        }
+    }
+
+    // Tree: Binary/general tree for data structures
+    private drawTree(el: Scene['elements'][0], p: number) {
+        const { x, y, nodes, nodeRadius } = el.props as { x: number; y: number; nodes: { value: string; children?: number[] }[]; nodeRadius?: number };
+        const s = el.style || {};
+
+        if (!nodes || nodes.length === 0) return;
+
+        const radius = nodeRadius || 25;
+        const levelHeight = 80;
+        const baseWidth = 300;
+
+        // Calculate positions for each node (simple binary tree layout)
+        const positions: { x: number; y: number }[] = [];
+        const queue: { idx: number; x: number; y: number; level: number }[] = [{ idx: 0, x, y, level: 0 }];
+
+        while (queue.length > 0) {
+            const { idx, x: nx, y: ny, level } = queue.shift()!;
+            positions[idx] = { x: nx, y: ny };
+
+            const node = nodes[idx];
+            if (node.children) {
+                const spread = baseWidth / Math.pow(2, level + 1);
+                node.children.forEach((childIdx, i) => {
+                    const offset = node.children!.length === 1 ? 0 : (i === 0 ? -spread : spread);
+                    queue.push({ idx: childIdx, x: nx + offset, y: ny + levelHeight, level: level + 1 });
+                });
+            }
+        }
+
+        const revealedNodes = Math.floor(nodes.length * p);
+
+        // Draw edges first
+        this.ctx.strokeStyle = (s.strokeColor as string) || '#666';
+        this.ctx.lineWidth = 2;
+
+        for (let i = 0; i < Math.min(revealedNodes, nodes.length); i++) {
+            const node = nodes[i];
+            if (node.children && positions[i]) {
+                node.children.forEach(childIdx => {
+                    if (childIdx < revealedNodes && positions[childIdx]) {
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(positions[i].x, positions[i].y + radius);
+                        this.ctx.lineTo(positions[childIdx].x, positions[childIdx].y - radius);
+                        this.ctx.stroke();
+                    }
+                });
+            }
+        }
+
+        // Draw nodes
+        for (let i = 0; i < Math.min(revealedNodes, nodes.length); i++) {
+            if (!positions[i]) continue;
+            const { x: nx, y: ny } = positions[i];
+
+            // Node circle
+            this.ctx.beginPath();
+            this.ctx.arc(nx, ny, radius, 0, Math.PI * 2);
+            this.ctx.fillStyle = (s.fillColor as string) || 'rgba(88,196,221,0.3)';
+            this.ctx.fill();
+            this.ctx.strokeStyle = (s.strokeColor as string) || COLORS.blue;
+            this.ctx.lineWidth = 2;
+            this.ctx.stroke();
+
+            // Node value
+            this.ctx.font = `bold ${(s.fontSize as number) || 16}px Arial`;
+            this.ctx.fillStyle = (s.textColor as string) || COLORS.white;
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'middle';
+            this.ctx.fillText(nodes[i].value, nx, ny);
+        }
+    }
+
+    // === ADVANCED BIO/CHEM ELEMENTS ===
+
+    // Cell Membrane: Phospholipid bilayer
+    private drawCellMembrane(el: Scene['elements'][0], p: number) {
+        const { x, y, width, height } = el.props as { x: number; y: number; width: number; height: number };
+        const s = el.style || {};
+
+        const lipidSpacing = 20;
+        const headRadius = 6;
+        const tailLength = height / 2 - headRadius * 2;
+        const numLipids = Math.floor(width / lipidSpacing);
+        const revealedLipids = Math.floor(numLipids * p);
+
+        for (let i = 0; i < revealedLipids; i++) {
+            const lx = x + i * lipidSpacing;
+
+            // Top layer (heads point up)
+            // Head
+            this.ctx.beginPath();
+            this.ctx.arc(lx, y, headRadius, 0, Math.PI * 2);
+            this.ctx.fillStyle = (s.fillColor as string) || COLORS.blue;
+            this.ctx.fill();
+
+            // Tails
+            this.ctx.beginPath();
+            this.ctx.moveTo(lx - 2, y + headRadius);
+            this.ctx.lineTo(lx - 2, y + headRadius + tailLength);
+            this.ctx.moveTo(lx + 2, y + headRadius);
+            this.ctx.lineTo(lx + 2, y + headRadius + tailLength);
+            this.ctx.strokeStyle = (s.strokeColor as string) || COLORS.yellow;
+            this.ctx.lineWidth = 2;
+            this.ctx.stroke();
+
+            // Bottom layer (heads point down)
+            // Head
+            this.ctx.beginPath();
+            this.ctx.arc(lx, y + height, headRadius, 0, Math.PI * 2);
+            this.ctx.fillStyle = (s.fillColor as string) || COLORS.blue;
+            this.ctx.fill();
+
+            // Tails
+            this.ctx.beginPath();
+            this.ctx.moveTo(lx - 2, y + height - headRadius);
+            this.ctx.lineTo(lx - 2, y + height - headRadius - tailLength);
+            this.ctx.moveTo(lx + 2, y + height - headRadius);
+            this.ctx.lineTo(lx + 2, y + height - headRadius - tailLength);
+            this.ctx.strokeStyle = (s.strokeColor as string) || COLORS.yellow;
+            this.ctx.stroke();
+        }
+
+        // Draw protein channel if many lipids shown
+        if (p > 0.7) {
+            const proteinAlpha = (p - 0.7) / 0.3;
+            this.ctx.globalAlpha = proteinAlpha;
+            const px = x + width / 2;
+
+            // Protein channel
+            this.ctx.beginPath();
+            this.ctx.moveTo(px - 15, y - headRadius);
+            this.ctx.bezierCurveTo(px - 20, y + height / 2, px - 20, y + height / 2, px - 15, y + height + headRadius);
+            this.ctx.lineTo(px + 15, y + height + headRadius);
+            this.ctx.bezierCurveTo(px + 20, y + height / 2, px + 20, y + height / 2, px + 15, y - headRadius);
+            this.ctx.closePath();
+            this.ctx.fillStyle = 'rgba(154,114,172,0.6)';
+            this.ctx.fill();
+            this.ctx.strokeStyle = COLORS.purple;
+            this.ctx.lineWidth = 2;
+            this.ctx.stroke();
+
+            this.ctx.globalAlpha = 1;
+        }
+    }
+
+    // Protein: Folded protein chain
+    private drawProtein(el: Scene['elements'][0], p: number) {
+        const { x, y, length, folds } = el.props as { x: number; y: number; length: number; folds: number };
+        const s = el.style || {};
+
+        const numFolds = folds || 5;
+        const foldWidth = length / numFolds;
+        const foldHeight = 40;
+        const drawnFolds = Math.floor(numFolds * p);
+
+        // Draw protein backbone with alpha helices and beta sheets
+        this.ctx.lineWidth = 8;
+        this.ctx.lineCap = 'round';
+
+        for (let i = 0; i < drawnFolds; i++) {
+            const fx = x + i * foldWidth;
+            const isHelix = i % 2 === 0;
+
+            if (isHelix) {
+                // Alpha helix (spiral)
+                this.ctx.beginPath();
+                for (let t = 0; t <= 1; t += 0.05) {
+                    const hx = fx + t * foldWidth;
+                    const hy = y + Math.sin(t * Math.PI * 3) * foldHeight / 2;
+                    if (t === 0) this.ctx.moveTo(hx, hy);
+                    else this.ctx.lineTo(hx, hy);
+                }
+                this.ctx.strokeStyle = COLORS.red;
+                this.ctx.stroke();
+            } else {
+                // Beta sheet (arrow)
+                this.ctx.beginPath();
+                this.ctx.moveTo(fx, y - foldHeight / 3);
+                this.ctx.lineTo(fx + foldWidth * 0.7, y - foldHeight / 3);
+                this.ctx.lineTo(fx + foldWidth * 0.7, y - foldHeight / 2);
+                this.ctx.lineTo(fx + foldWidth, y);
+                this.ctx.lineTo(fx + foldWidth * 0.7, y + foldHeight / 2);
+                this.ctx.lineTo(fx + foldWidth * 0.7, y + foldHeight / 3);
+                this.ctx.lineTo(fx, y + foldHeight / 3);
+                this.ctx.closePath();
+                this.ctx.fillStyle = COLORS.teal;
+                this.ctx.fill();
+                this.ctx.strokeStyle = '#fff';
+                this.ctx.lineWidth = 2;
+                this.ctx.stroke();
+            }
+        }
+
+        // Draw N and C terminus labels
+        if (p > 0.3) {
+            this.ctx.font = 'bold 14px Arial';
+            this.ctx.fillStyle = COLORS.white;
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText('N', x - 15, y);
+        }
+        if (p > 0.9) {
+            this.ctx.fillText('C', x + length + 15, y);
+        }
+    }
+
+    // Orbital: Electron orbital shapes
+    private drawOrbital(el: Scene['elements'][0], p: number) {
+        const { x, y, type, size } = el.props as { x: number; y: number; type: 's' | 'p' | 'd'; size: number };
+        const s = el.style || {};
+
+        const orbSize = size || 60;
+        const scale = el.animation?.type === 'scale' ? p : 1;
+
+        this.ctx.globalAlpha = 0.6;
+
+        if (type === 's') {
+            // S orbital - sphere
+            const gradient = this.ctx.createRadialGradient(x, y, 0, x, y, orbSize * scale);
+            gradient.addColorStop(0, (s.fillColor as string) || 'rgba(88,196,221,0.8)');
+            gradient.addColorStop(1, 'rgba(88,196,221,0)');
+
+            this.ctx.beginPath();
+            this.ctx.arc(x, y, orbSize * scale, 0, Math.PI * 2);
+            this.ctx.fillStyle = gradient;
+            this.ctx.fill();
+            this.ctx.strokeStyle = (s.strokeColor as string) || COLORS.blue;
+            this.ctx.lineWidth = 2;
+            this.ctx.stroke();
+
+        } else if (type === 'p') {
+            // P orbital - dumbbell shape
+            const lobeSize = orbSize * 0.6 * scale;
+
+            // Upper lobe
+            this.ctx.beginPath();
+            this.ctx.ellipse(x, y - lobeSize, lobeSize * 0.4, lobeSize, 0, 0, Math.PI * 2);
+            this.ctx.fillStyle = (s.fillColor as string) || 'rgba(252,98,85,0.6)';
+            this.ctx.fill();
+            this.ctx.strokeStyle = COLORS.red;
+            this.ctx.lineWidth = 2;
+            this.ctx.stroke();
+
+            // Lower lobe
+            this.ctx.beginPath();
+            this.ctx.ellipse(x, y + lobeSize, lobeSize * 0.4, lobeSize, 0, 0, Math.PI * 2);
+            this.ctx.fillStyle = 'rgba(88,196,221,0.6)';
+            this.ctx.fill();
+            this.ctx.strokeStyle = COLORS.blue;
+            this.ctx.stroke();
+
+            // Node at center
+            this.ctx.beginPath();
+            this.ctx.arc(x, y, 5, 0, Math.PI * 2);
+            this.ctx.fillStyle = '#333';
+            this.ctx.fill();
+
+        } else if (type === 'd') {
+            // D orbital - 4 lobes (cloverleaf)
+            const lobeSize = orbSize * 0.5 * scale;
+            const colors = [COLORS.blue, COLORS.red, COLORS.blue, COLORS.red];
+            const angles = [0, Math.PI / 2, Math.PI, Math.PI * 1.5];
+
+            for (let i = 0; i < 4; i++) {
+                const lx = x + Math.cos(angles[i]) * lobeSize;
+                const ly = y + Math.sin(angles[i]) * lobeSize;
+
+                this.ctx.beginPath();
+                this.ctx.ellipse(lx, ly, lobeSize * 0.3, lobeSize * 0.6, angles[i], 0, Math.PI * 2);
+                this.ctx.fillStyle = colors[i] === COLORS.blue ? 'rgba(88,196,221,0.5)' : 'rgba(252,98,85,0.5)';
+                this.ctx.fill();
+                this.ctx.strokeStyle = colors[i];
+                this.ctx.lineWidth = 2;
+                this.ctx.stroke();
+            }
+
+            // Node at center
+            this.ctx.beginPath();
+            this.ctx.arc(x, y, 6, 0, Math.PI * 2);
+            this.ctx.fillStyle = '#333';
+            this.ctx.fill();
+        }
+
+        this.ctx.globalAlpha = 1;
+
+        // Draw label
+        if (p > 0.7) {
+            this.ctx.font = 'bold 16px Arial';
+            this.ctx.fillStyle = COLORS.white;
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText(type + ' orbital', x, y + orbSize + 25);
+        }
+    }
 }
+
 
 export default function VideoLectureGenerator({ className }: { className?: string }) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
