@@ -50,11 +50,20 @@ SCENE FORMAT:
   "elements": [8-12 elements]
 }
 
-LAYOUT RULES (NO OVERLAPPING):
-- Title: y: 80-120
-- Equation: y: 180-220
-- Visuals: y: 260-520
-- Space text elements 50px apart vertically
+LAYOUT RULES (CRITICAL - NO OVERLAPPING):
+- Title: y: 80-120 (centered at x: 400)
+- Equation: y: 180-220 (centered at x: 400)
+- Main visuals: y: 280-450 (centered)
+- Labels MUST be positioned OUTSIDE the visual elements, not on top
+- Space ALL text elements minimum 60px apart vertically
+- For diagrams with multiple labels:
+  * Position labels on DIFFERENT SIDES (left/right/top/bottom) of the diagram
+  * Use staggered y positions (e.g., 260, 330, 400, 470)
+  * Labels pointing to left side: x: 100-200
+  * Labels pointing to right side: x: 600-700
+  * Top labels: y: 200-250
+  * Bottom labels: y: 480-550
+- NEVER place text labels directly over lines, shapes, or other text
 
 === MATH & PHYSICS ELEMENTS ===
 1. TEXT: {"id":"t1","type":"text","props":{"text":"Title","x":400,"y":100},"style":{"fillColor":"#ece6e2","fontSize":36},"animation":{"type":"fadeIn","duration":800,"delay":0}}
@@ -78,24 +87,65 @@ LAYOUT RULES (NO OVERLAPPING):
 
 COLORS: #58c4dd (blue), #5cd0b3 (teal), #83c167 (green), #ffff00 (yellow), #e1a158 (gold), #fc6255 (red), #9a72ac (purple), #ece6e2 (white)
 
+DOMAIN RULES (STRICT - MUST FOLLOW):
+- MATH/PHYSICS/COMPUTER SCIENCE topics: ONLY use these elements: text, equation, circle, line, arrow, graph, shape, number, grid, rect, flowbox
+  * DO NOT use: atom, molecule, bond, dna, reactionArrow, ellipse (as cell)
+  * For CS: Use flowbox for algorithms, rect for data structures, graph for complexity
+- CHEMISTRY topics: Use atom, molecule, bond, reactionArrow + text, equation, arrow
+- BIOLOGY topics: Use ellipse (cells), dna, flowbox (processes), rect (organelles) + text, arrow
+
 REQUIREMENTS:
 1. Generate EXACTLY ${sceneCount} scenes
-2. For CHEMISTRY topics: Use atom, molecule, bond, reactionArrow elements
-3. For BIOLOGY topics: Use ellipse (cells), rect (organelles), dna, flowbox elements
-4. For MATH/PHYSICS: Use equation, graph, shape, arrow elements
-5. Space elements properly - NO OVERLAPPING
-6. Use Unicode: ², ³, π, θ, α, β, Σ, →
+2. STRICTLY match element types to the topic domain (see DOMAIN RULES above)
+3. NEVER use atom/molecule/bond/dna in math, physics, or computer science lectures
+4. Space elements properly - NO OVERLAPPING
+5. Use Unicode: ², ³, π, θ, α, β, Σ, →
 
-Create visually rich, educational content appropriate for the topic.`;
+Create visually rich, educational content using ONLY elements appropriate for the topic domain.`;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    // Retry logic with exponential backoff for handling intermittent empty responses
+    const MAX_RETRIES = 3;
+    let text = '';
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        console.log(`Gemini API attempt ${attempt}/${MAX_RETRIES}...`);
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        text = response.text();
+
+        // Check if response is valid
+        if (text && text.trim().length >= 10) {
+          console.log(`Gemini returned valid response on attempt ${attempt} (${text.length} chars)`);
+          break;
+        } else {
+          throw new Error(`Empty or too short response (length: ${text?.length || 0})`);
+        }
+      } catch (retryError) {
+        lastError = retryError as Error;
+        console.warn(`Gemini API attempt ${attempt} failed:`, (retryError as Error).message);
+
+        if (attempt < MAX_RETRIES) {
+          // Exponential backoff: 1s, 2s, 4s...
+          const backoffMs = Math.pow(2, attempt - 1) * 1000;
+          console.log(`Retrying in ${backoffMs}ms...`);
+          await new Promise(resolve => setTimeout(resolve, backoffMs));
+        }
+      }
+    }
 
     // Parse JSON with multiple fallback methods
     let lectureScript;
     try {
       let cleanText = text.trim();
+
+      // Check if response is empty or too short after all retries
+      if (!cleanText || cleanText.length < 10) {
+        console.warn(`Gemini returned empty or very short response after ${MAX_RETRIES} attempts, using fallback`);
+        console.warn('Last error:', lastError?.message);
+        throw new Error('Empty response from Gemini after retries');
+      }
 
       // Remove markdown code blocks
       if (cleanText.startsWith('```json')) cleanText = cleanText.slice(7);
@@ -117,15 +167,26 @@ Create visually rich, educational content appropriate for the topic.`;
         .replace(/\r/g, '')      // Remove carriage returns
         .replace(/\t/g, ' ');    // Replace tabs with spaces
 
+      // Attempt to repair truncated JSON by balancing braces/brackets
+      cleanText = repairTruncatedJson(cleanText);
+
       lectureScript = JSON.parse(cleanText);
 
       // Ensure we have scenes
       if (!lectureScript.scenes || lectureScript.scenes.length < 2) {
         lectureScript = createFallbackLecture(title, sceneCount, sceneDuration);
       }
+
+      // Filter out domain-inappropriate elements (e.g., biology/chemistry in math lectures)
+      lectureScript = filterDomainElements(lectureScript, title);
+
+      // Post-process to fix any overlapping elements
+      lectureScript = fixOverlappingElements(lectureScript);
     } catch (parseError) {
       console.error('Failed to parse Gemini response, using fallback. Error:', parseError);
-      console.error('Response preview:', text.substring(0, 300));
+      console.error('Response length:', text.length);
+      console.error('Response start:', text.substring(0, 200));
+      console.error('Response end:', text.substring(Math.max(0, text.length - 200)));
       lectureScript = createFallbackLecture(title, sceneCount, sceneDuration);
     }
 
@@ -137,6 +198,98 @@ Create visually rich, educational content appropriate for the topic.`;
       { status: 500 },
     );
   }
+}
+
+// Attempt to repair truncated JSON by balancing braces and brackets
+function repairTruncatedJson(json: string): string {
+  // First, try to parse as-is - if it works, no repair needed
+  try {
+    JSON.parse(json);
+    return json;
+  } catch {
+    // Continue with repair logic
+  }
+
+  let result = json.trim();
+
+  // Remove any trailing incomplete string (ends without closing quote)
+  // This handles cases like: {"key": "incomplete text
+  const lastQuote = result.lastIndexOf('"');
+  const lastColon = result.lastIndexOf(':');
+  const lastBrace = Math.max(result.lastIndexOf('}'), result.lastIndexOf(']'));
+
+  // If the last meaningful character looks like an incomplete value, truncate
+  if (lastQuote > lastBrace && lastQuote > lastColon) {
+    // Check if we're in an incomplete string
+    const afterLastQuote = result.substring(lastQuote + 1).trim();
+    if (!afterLastQuote.startsWith(',') && !afterLastQuote.startsWith('}') && !afterLastQuote.startsWith(']')) {
+      // Find a good truncation point
+      const truncateAt = Math.max(
+        result.lastIndexOf('},'),
+        result.lastIndexOf('}]'),
+        result.lastIndexOf('"}'),
+        result.lastIndexOf('"]'),
+        result.lastIndexOf('",'),
+        result.lastIndexOf('"],'),
+        result.lastIndexOf('"},')
+      );
+
+      if (truncateAt > 0) {
+        result = result.substring(0, truncateAt + 1);
+      }
+    }
+  }
+
+  // Remove trailing comma if present
+  result = result.replace(/,\s*$/, '');
+
+  // Count unbalanced braces and brackets
+  let openBraces = 0;
+  let openBrackets = 0;
+  let inString = false;
+  let escapeNext = false;
+
+  for (let i = 0; i < result.length; i++) {
+    const char = result[i];
+
+    if (escapeNext) {
+      escapeNext = false;
+      continue;
+    }
+
+    if (char === '\\' && inString) {
+      escapeNext = true;
+      continue;
+    }
+
+    if (char === '"') {
+      inString = !inString;
+      continue;
+    }
+
+    if (!inString) {
+      if (char === '{') openBraces++;
+      else if (char === '}') openBraces--;
+      else if (char === '[') openBrackets++;
+      else if (char === ']') openBrackets--;
+    }
+  }
+
+  // Close any unclosed strings (if we're still in a string)
+  if (inString) {
+    result += '"';
+  }
+
+  // Add missing closing brackets and braces
+  // Brackets should be closed before braces since arrays are usually inside objects
+  for (let i = 0; i < openBrackets; i++) {
+    result += ']';
+  }
+  for (let i = 0; i < openBraces; i++) {
+    result += '}';
+  }
+
+  return result;
 }
 
 function createFallbackLecture(
@@ -265,4 +418,153 @@ function createFallbackLecture(
     totalDuration: sceneCount * sceneDuration,
     scenes,
   };
+}
+
+// Filter out domain-inappropriate elements based on topic
+function filterDomainElements(script: { title: string; totalDuration: number; scenes: { id: string; duration: number; narration: string; background: string; elements: { id: string; type: string; props: Record<string, unknown>; style?: Record<string, unknown>; animation?: { type: string; duration: number; delay: number } }[] }[] }, title: string): typeof script {
+  const titleLower = title.toLowerCase();
+
+  // Detect topic domain
+  const isChemistry = /chem|atom|molecule|bond|reaction|element|compound|ion|acid|base|electron|proton|periodic/.test(titleLower);
+  const isBiology = /bio|cell|dna|rna|protein|gene|organism|evolution|photosynthesis|mitosis|enzyme|anatomy|organ/.test(titleLower);
+  const isMathPhysicsCS = /math|calculus|algebra|geometry|physics|mechanics|quantum|relativity|computer|algorithm|data structure|programming|code|software|binary|sort|search|graph theory|complexity|neural network|machine learning(?!.*bio)/.test(titleLower);
+
+  // Elements that are chemistry/biology specific
+  const chemBioElements = ['atom', 'molecule', 'bond', 'dna', 'reactionArrow'];
+  // Elements specific to biology only
+  const bioOnlyElements = ['dna'];
+  // Elements specific to chemistry only  
+  const chemOnlyElements = ['atom', 'molecule', 'bond', 'reactionArrow'];
+
+  for (const scene of script.scenes) {
+    // Filter based on domain
+    if (isMathPhysicsCS && !isChemistry && !isBiology) {
+      // Math/Physics/CS - remove ALL chemistry and biology specific elements
+      scene.elements = scene.elements.filter(el => !chemBioElements.includes(el.type));
+    } else if (isChemistry && !isBiology) {
+      // Chemistry - remove biology-only elements
+      scene.elements = scene.elements.filter(el => !bioOnlyElements.includes(el.type));
+    } else if (isBiology && !isChemistry) {
+      // Biology - remove chemistry-only elements
+      scene.elements = scene.elements.filter(el => !chemOnlyElements.includes(el.type));
+    }
+    // If mixed or unclear, allow all elements
+  }
+
+  return script;
+}
+
+// Fix overlapping text elements by adjusting positions
+interface ElementProps {
+  x?: number;
+  y?: number;
+  text?: string;
+  equation?: string;
+  [key: string]: unknown;
+}
+
+interface LectureElement {
+  id: string;
+  type: string;
+  props: ElementProps;
+  style?: Record<string, unknown>;
+  animation?: { type: string; duration: number; delay: number };
+}
+
+interface LectureScene {
+  id: string;
+  duration: number;
+  narration: string;
+  background: string;
+  elements: LectureElement[];
+}
+
+interface LectureScript {
+  title: string;
+  totalDuration: number;
+  scenes: LectureScene[];
+}
+
+function fixOverlappingElements(script: LectureScript): LectureScript {
+  const MIN_VERTICAL_SPACING = 60;
+  const MIN_HORIZONTAL_SPACING = 100;
+
+  for (const scene of script.scenes) {
+    // Get all text-like elements (text, equation)
+    const textElements = scene.elements.filter(
+      el => el.type === 'text' || el.type === 'equation'
+    );
+
+    // Sort by y position
+    textElements.sort((a, b) => {
+      const aY = (a.props?.y as number) || 0;
+      const bY = (b.props?.y as number) || 0;
+      return aY - bY;
+    });
+
+    // Check for vertical overlaps and adjust
+    for (let i = 1; i < textElements.length; i++) {
+      const prev = textElements[i - 1];
+      const curr = textElements[i];
+
+      const prevY = (prev.props?.y as number) || 0;
+      const currY = (curr.props?.y as number) || 0;
+      const prevX = (prev.props?.x as number) || 400;
+      const currX = (curr.props?.x as number) || 400;
+
+      // If elements are close horizontally (within 200px), check vertical spacing
+      if (Math.abs(prevX - currX) < 200) {
+        const verticalGap = currY - prevY;
+
+        if (verticalGap < MIN_VERTICAL_SPACING) {
+          // Move current element down to create proper spacing
+          const adjustment = MIN_VERTICAL_SPACING - verticalGap;
+          curr.props.y = currY + adjustment;
+
+          // Clamp to canvas bounds (600 height)
+          if ((curr.props.y as number) > 550) {
+            // If we're pushing too low, try moving horizontally instead
+            curr.props.y = currY;
+            if (currX <= 400) {
+              curr.props.x = Math.max(100, currX - MIN_HORIZONTAL_SPACING);
+            } else {
+              curr.props.x = Math.min(700, currX + MIN_HORIZONTAL_SPACING);
+            }
+          }
+        }
+      }
+    }
+
+    // Second pass: check all pairs for close positions
+    for (let i = 0; i < textElements.length; i++) {
+      for (let j = i + 1; j < textElements.length; j++) {
+        const a = textElements[i];
+        const b = textElements[j];
+
+        const aX = (a.props?.x as number) || 400;
+        const aY = (a.props?.y as number) || 300;
+        const bX = (b.props?.x as number) || 400;
+        const bY = (b.props?.y as number) || 300;
+
+        const dx = Math.abs(aX - bX);
+        const dy = Math.abs(aY - bY);
+
+        // If both very close, adjust the one that comes later
+        if (dx < 80 && dy < 40) {
+          // They're overlapping - move b
+          if (bY < 300) {
+            b.props.y = bY - 50; // Move up
+          } else {
+            b.props.y = bY + 50; // Move down
+          }
+
+          // Clamp to canvas
+          if ((b.props.y as number) < 50) b.props.y = 50;
+          if ((b.props.y as number) > 550) b.props.y = 550;
+        }
+      }
+    }
+  }
+
+  return script;
 }
